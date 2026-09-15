@@ -593,6 +593,8 @@
     authUser: null,
     authLoading: false,
     authError: null,
+    authMode: 'login',
+    authEmail: '',
     playerId: lsGet('qc_pid', null) || uid(),
     playerName: lsGet('qc_name', ''),
     groupId: lsGet('qc_group', ''),
@@ -677,17 +679,47 @@
   }
 
   function loginScreen(){
-    var name = state.authUser && state.authUser.displayName;
+    var isSignup = state.authMode === 'signup';
     var html = '<div class="word mt24 center">Quiz<span class="amp">&amp;</span>Co</div>'
-      + '<div class="muted center mt8" style="margin-bottom:28px;">Inicia sesión para jugar con tu grupo.</div>'
-      + '<div class="card center">'
-      + '  <button class="btn btn-brand" id="googleSignInBtn" style="display:flex;align-items:center;justify-content:center;gap:10px;"' + (state.authLoading ? ' disabled' : '') + '>'
-      + googleIconSvg()
-      + '    <span>' + (state.authLoading ? 'Conectando…' : 'Continuar con Google') + '</span>'
-      + '  </button>'
+      + '<div class="muted center mt8" style="margin-bottom:20px;">' + (isSignup ? 'Crea una cuenta para jugar con tu grupo.' : 'Inicia sesión para jugar con tu grupo.') + '</div>';
+    html += '<div class="tabs" style="margin-bottom:16px;">'
+      + '<div class="tab' + (!isSignup ? ' active' : '') + '" id="authTabLogin">Iniciar sesión</div>'
+      + '<div class="tab' + (isSignup ? ' active' : '') + '" id="authTabSignup">Crear cuenta</div>'
       + '</div>';
-    if (state.authError) html += '<div class="faint center mt16" style="color:var(--bad);">' + esc(state.authError) + '</div>';
+    html += '<div class="card">'
+      + '<input type="email" id="authEmailInput" placeholder="Correo electrónico" autocomplete="email" value="' + esc(state.authEmail || '') + '">'
+      + '<input type="password" id="authPasswordInput" class="mt8" placeholder="Contraseña" autocomplete="' + (isSignup ? 'new-password' : 'current-password') + '">'
+      + '<button class="btn btn-brand mt16" id="authSubmitBtn"' + (state.authLoading ? ' disabled' : '') + '>'
+      + (state.authLoading ? 'Un momento…' : (isSignup ? 'Crear cuenta' : 'Iniciar sesión')) + '</button>'
+      + '</div>';
+    html += '<div class="center mt16 faint">o</div>';
+    html += '<div class="card center mt8">'
+      + '<button class="btn btn-outline" id="googleSignInBtn" style="display:flex;align-items:center;justify-content:center;gap:10px;"' + (state.authLoading ? ' disabled' : '') + '>'
+      + googleIconSvg()
+      + '<span>Continuar con Google</span>'
+      + '</button>'
+      + '</div>';
+    if (state.authError) html += '<div class="faint center mt16" style="color:var(--bad);font-weight:700;">' + esc(state.authError) + '</div>';
     return html;
+  }
+
+  // Maps Firebase Auth error codes to short, friendly Spanish messages —
+  // shown for both the email/password and Google flows.
+  function authErrorMessage(e){
+    var code = e && e.code;
+    var map = {
+      'auth/invalid-email': 'Ese correo no es válido.',
+      'auth/user-not-found': 'No hay ninguna cuenta con ese correo. Prueba a crear una.',
+      'auth/wrong-password': 'Contraseña incorrecta.',
+      'auth/invalid-credential': 'Correo o contraseña incorrectos.',
+      'auth/email-already-in-use': 'Ya existe una cuenta con ese correo. Prueba a iniciar sesión.',
+      'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres.',
+      'auth/too-many-requests': 'Demasiados intentos. Espera un momento y vuelve a intentarlo.',
+      'auth/popup-blocked': 'El navegador ha bloqueado la ventana de Google. Inténtalo de nuevo.',
+      'auth/unauthorized-domain': 'Este sitio todavía no está autorizado para iniciar sesión con Google.',
+      'auth/network-request-failed': 'Error de conexión. Comprueba tu internet e inténtalo de nuevo.'
+    };
+    return (code && map[code]) || 'Ha ocurrido un error. Inténtalo de nuevo.';
   }
 
   function googleIconSvg(){
@@ -700,8 +732,60 @@
   }
 
   function bindLoginScreen(){
-    var btn = document.getElementById('googleSignInBtn');
-    if (btn) btn.addEventListener('click', signInWithGoogle);
+    var tabLogin = document.getElementById('authTabLogin');
+    var tabSignup = document.getElementById('authTabSignup');
+    if (tabLogin) tabLogin.addEventListener('click', function(){
+      if (state.authMode !== 'login'){ state.authMode = 'login'; state.authError = null; render(); }
+    });
+    if (tabSignup) tabSignup.addEventListener('click', function(){
+      if (state.authMode !== 'signup'){ state.authMode = 'signup'; state.authError = null; render(); }
+    });
+    var emailInput = document.getElementById('authEmailInput');
+    var passInput = document.getElementById('authPasswordInput');
+    if (emailInput) emailInput.addEventListener('input', function(){ state.authEmail = emailInput.value; });
+    function submit(){
+      var email = emailInput ? emailInput.value : '';
+      var pass = passInput ? passInput.value : '';
+      if (state.authMode === 'signup') signUpWithEmail(email, pass);
+      else signInWithEmail(email, pass);
+    }
+    if (passInput) passInput.addEventListener('keydown', function(e){ if (e.key === 'Enter') submit(); });
+    var submitBtn = document.getElementById('authSubmitBtn');
+    if (submitBtn) submitBtn.addEventListener('click', submit);
+    var googleBtn = document.getElementById('googleSignInBtn');
+    if (googleBtn) googleBtn.addEventListener('click', signInWithGoogle);
+  }
+
+  function signInWithEmail(email, password){
+    if (!firebaseAuth || state.authLoading) return;
+    email = (email || '').trim();
+    if (!email || !password){ state.authError = 'Escribe tu correo y tu contraseña.'; render(); return; }
+    state.authLoading = true;
+    state.authError = null;
+    render();
+    firebaseAuth.signInWithEmailAndPassword(email, password).catch(function(e){
+      console.error('quizco email sign-in error', e);
+      state.authLoading = false;
+      state.authError = authErrorMessage(e);
+      render();
+    });
+    // On success, onAuthStateChanged (see initAuth) picks it up and moves the app forward.
+  }
+
+  function signUpWithEmail(email, password){
+    if (!firebaseAuth || state.authLoading) return;
+    email = (email || '').trim();
+    if (!email || !password){ state.authError = 'Escribe tu correo y tu contraseña.'; render(); return; }
+    if (password.length < 6){ state.authError = 'La contraseña debe tener al menos 6 caracteres.'; render(); return; }
+    state.authLoading = true;
+    state.authError = null;
+    render();
+    firebaseAuth.createUserWithEmailAndPassword(email, password).catch(function(e){
+      console.error('quizco email sign-up error', e);
+      state.authLoading = false;
+      state.authError = authErrorMessage(e);
+      render();
+    });
   }
 
   function signInWithGoogle(){
@@ -709,16 +793,25 @@
     state.authLoading = true;
     state.authError = null;
     render();
-    var provider = new firebase.auth.GoogleAuthProvider();
-    firebaseAuth.signInWithPopup(provider).catch(function(e){
+    try {
+      var provider = new firebase.auth.GoogleAuthProvider();
+      // A popup silently hangs on plenty of mobile browsers (and any in-app
+      // webview, e.g. a link opened from WhatsApp/Instagram) — a full-page
+      // redirect works everywhere popups don't, at the cost of leaving and
+      // coming back to the page. getRedirectResult() in initAuth() picks up
+      // the outcome (including any error) once the page reloads.
+      firebaseAuth.signInWithRedirect(provider).catch(function(e){
+        console.error('quizco google sign-in error', e);
+        state.authLoading = false;
+        state.authError = authErrorMessage(e);
+        render();
+      });
+    } catch (e){
       console.error('quizco google sign-in error', e);
       state.authLoading = false;
-      state.authError = (e && e.code === 'auth/popup-closed-by-user')
-        ? null
-        : 'No se ha podido iniciar sesión con Google. Inténtalo de nuevo.';
+      state.authError = authErrorMessage(e);
       render();
-    });
-    // On success, onAuthStateChanged (see initAuth) picks it up and moves the app forward.
+    }
   }
 
   function signOutUser(){
@@ -2030,6 +2123,9 @@
       state.desempateUnlocking = false;
       state.chatMessages = null;
       state.db = null;
+      state.authMode = 'login';
+      state.authEmail = '';
+      state.authError = null;
       signOutUser();
     });
     var toggle = document.getElementById('toggleNotifBtn');
@@ -2740,30 +2836,39 @@
       if (state.groupId && state.playerName) setTimeout(initDb, 250);
       return;
     }
-    firebaseAuth.onAuthStateChanged(function(user){
-      var wasChecked = state.authChecked;
-      state.authChecked = true;
-      state.authLoading = false;
-      if (user){
-        state.authUser = { uid: user.uid, displayName: user.displayName || '', photoURL: user.photoURL || '' };
-        state.playerId = user.uid;
-        lsSet('qc_pid', user.uid);
-      } else {
-        state.authUser = null;
-      }
-      render();
-      // Returning visitor who was already signed in and already had a
-      // league + name picked from a previous session: resume straight into
-      // the game. A brand-new sign-in mid-session instead flows through
-      // onboarding/nameScreen, which call initDb() themselves once ready.
-      if (!wasChecked && state.authUser && state.groupId && state.playerName){
-        setTimeout(initDb, 250);
-      }
-    }, function(err){
-      console.error('quizco auth state error', err);
-      state.authChecked = true;
-      render();
-    });
+    function attachAuthListener(){
+      firebaseAuth.onAuthStateChanged(function(user){
+        var wasChecked = state.authChecked;
+        state.authChecked = true;
+        state.authLoading = false;
+        if (user){
+          state.authUser = { uid: user.uid, displayName: user.displayName || '', photoURL: user.photoURL || '' };
+          state.playerId = user.uid;
+          lsSet('qc_pid', user.uid);
+        } else {
+          state.authUser = null;
+        }
+        render();
+        // Returning visitor who was already signed in and already had a
+        // league + name picked from a previous session: resume straight into
+        // the game. A brand-new sign-in mid-session instead flows through
+        // onboarding/nameScreen, which call initDb() themselves once ready.
+        if (!wasChecked && state.authUser && state.groupId && state.playerName){
+          setTimeout(initDb, 250);
+        }
+      }, function(err){
+        console.error('quizco auth state error', err);
+        state.authChecked = true;
+        render();
+      });
+    }
+    // Surface any error from a just-completed Google redirect (e.g. the
+    // domain not being authorized yet) before the ordinary listener below
+    // takes over — otherwise a failed redirect looks like nothing happened.
+    firebaseAuth.getRedirectResult().catch(function(e){
+      console.error('quizco google redirect result error', e);
+      state.authError = authErrorMessage(e);
+    }).then(attachAuthListener, attachAuthListener);
   }
 
   render();
