@@ -83,7 +83,11 @@
   .btn-brand { background: var(--brand); color: var(--ink); }
   .btn-brand:disabled { opacity: 0.4; cursor: not-allowed; }
   .btn-outline { background: var(--surface); color: var(--ink); }
-  input[type=text] { width: 100%; border: 2.5px solid var(--ink); background: var(--surface); color: var(--ink); border-radius: 10px; padding: 14px 16px; font-size: 15px; font-family: 'Work Sans', sans-serif; font-weight: 600; }
+  input[type=text], input[type=email], input[type=password], input[type=date], select.selinput { width: 100%; border: 2.5px solid var(--ink); background: var(--surface); color: var(--ink); border-radius: 10px; padding: 14px 16px; font-size: 15px; font-family: 'Work Sans', sans-serif; font-weight: 600; -webkit-appearance: none; appearance: none; }
+  select.selinput { background-image: linear-gradient(45deg, transparent 50%, var(--ink) 50%), linear-gradient(135deg, var(--ink) 50%, transparent 50%); background-position: calc(100% - 20px) calc(50% - 3px), calc(100% - 14px) calc(50% - 3px); background-size: 6px 6px, 6px 6px; background-repeat: no-repeat; }
+  input[type=date] { color-scheme: light; }
+  label.fieldlabel { display: block; font-weight: 700; font-size: 12.5px; color: var(--ink-soft); margin: 12px 0 6px; }
+  label.fieldlabel:first-child { margin-top: 0; }
   .pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 7px 13px; font-weight: 700; font-size: 12.5px; }
   .daypicker { display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 16px; -webkit-overflow-scrolling: touch; }
   .daypill { flex-shrink: 0; border-radius: 999px; padding: 8px 14px; font-weight: 700; font-size: 13px; border: 2px solid var(--line); background: var(--surface); color: var(--ink-soft); cursor: pointer; }
@@ -191,7 +195,7 @@
     .badgecard { padding: 12px; gap: 10px; }
     .badgeicon { width: 36px; height: 36px; font-size: 17px; }
     .chatbubble { max-width: 85%; }
-    input[type=text] { padding: 12px 14px; }
+    input[type=text], input[type=email], input[type=password], input[type=date], select.selinput { padding: 12px 14px; }
   }
   @media (max-width: 340px) {
     .tab { padding: 6px 8px; font-size: 11.5px; }
@@ -595,6 +599,8 @@
     authError: null,
     authMode: 'login',
     authEmail: '',
+    authCountry: '',
+    authBirthday: '',
     playerId: lsGet('qc_pid', null) || uid(),
     playerName: lsGet('qc_name', ''),
     groupId: lsGet('qc_group', ''),
@@ -678,6 +684,8 @@
     bindMainScreen();
   }
 
+  var COUNTRY_LIST = ['España', 'Andorra', 'Francia', 'Portugal', 'México', 'Argentina', 'Colombia', 'Chile', 'Perú', 'Uruguay', 'Venezuela', 'Estados Unidos', 'Reino Unido', 'Alemania', 'Italia', 'Otro'];
+
   function loginScreen(){
     var isSignup = state.authMode === 'signup';
     var html = '<div class="word mt24 center">Quiz<span class="amp">&amp;</span>Co</div>'
@@ -687,9 +695,20 @@
       + '<div class="tab' + (isSignup ? ' active' : '') + '" id="authTabSignup">Crear cuenta</div>'
       + '</div>';
     html += '<div class="card">'
-      + '<input type="email" id="authEmailInput" placeholder="Correo electrónico" autocomplete="email" value="' + esc(state.authEmail || '') + '">'
-      + '<input type="password" id="authPasswordInput" class="mt8" placeholder="Contraseña" autocomplete="' + (isSignup ? 'new-password' : 'current-password') + '">'
-      + '<button class="btn btn-brand mt16" id="authSubmitBtn"' + (state.authLoading ? ' disabled' : '') + '>'
+      + '<label class="fieldlabel" for="authEmailInput">Correo electrónico</label>'
+      + '<input type="email" id="authEmailInput" placeholder="tucorreo@ejemplo.com" autocomplete="email" value="' + esc(state.authEmail || '') + '">'
+      + '<label class="fieldlabel" for="authPasswordInput">Contraseña</label>'
+      + '<input type="password" id="authPasswordInput" placeholder="••••••••" autocomplete="' + (isSignup ? 'new-password' : 'current-password') + '">';
+    if (isSignup){
+      html += '<label class="fieldlabel" for="authCountryInput">País</label>'
+        + '<select class="selinput" id="authCountryInput">'
+        + '<option value="">Selecciona un país…</option>'
+        + COUNTRY_LIST.map(function(c){ return '<option value="' + esc(c) + '"' + (state.authCountry === c ? ' selected' : '') + '>' + esc(c) + '</option>'; }).join('')
+        + '</select>'
+        + '<label class="fieldlabel" for="authBirthdayInput">Fecha de nacimiento</label>'
+        + '<input type="date" id="authBirthdayInput" value="' + esc(state.authBirthday || '') + '">';
+    }
+    html += '<button class="btn btn-brand mt16" id="authSubmitBtn"' + (state.authLoading ? ' disabled' : '') + '>'
       + (state.authLoading ? 'Un momento…' : (isSignup ? 'Crear cuenta' : 'Iniciar sesión')) + '</button>'
       + '</div>';
     html += '<div class="center mt16 faint">o</div>';
@@ -742,14 +761,19 @@
     });
     var emailInput = document.getElementById('authEmailInput');
     var passInput = document.getElementById('authPasswordInput');
+    var countryInput = document.getElementById('authCountryInput');
+    var birthdayInput = document.getElementById('authBirthdayInput');
     if (emailInput) emailInput.addEventListener('input', function(){ state.authEmail = emailInput.value; });
+    if (countryInput) countryInput.addEventListener('change', function(){ state.authCountry = countryInput.value; });
+    if (birthdayInput) birthdayInput.addEventListener('input', function(){ state.authBirthday = birthdayInput.value; });
     function submit(){
       var email = emailInput ? emailInput.value : '';
       var pass = passInput ? passInput.value : '';
-      if (state.authMode === 'signup') signUpWithEmail(email, pass);
+      if (state.authMode === 'signup') signUpWithEmail(email, pass, countryInput ? countryInput.value : '', birthdayInput ? birthdayInput.value : '');
       else signInWithEmail(email, pass);
     }
     if (passInput) passInput.addEventListener('keydown', function(e){ if (e.key === 'Enter') submit(); });
+    if (birthdayInput) birthdayInput.addEventListener('keydown', function(e){ if (e.key === 'Enter') submit(); });
     var submitBtn = document.getElementById('authSubmitBtn');
     if (submitBtn) submitBtn.addEventListener('click', submit);
     var googleBtn = document.getElementById('googleSignInBtn');
@@ -772,15 +796,26 @@
     // On success, onAuthStateChanged (see initAuth) picks it up and moves the app forward.
   }
 
-  function signUpWithEmail(email, password){
+  function signUpWithEmail(email, password, country, birthday){
     if (!firebaseAuth || state.authLoading) return;
     email = (email || '').trim();
+    country = (country || '').trim();
+    birthday = (birthday || '').trim();
     if (!email || !password){ state.authError = 'Escribe tu correo y tu contraseña.'; render(); return; }
     if (password.length < 6){ state.authError = 'La contraseña debe tener al menos 6 caracteres.'; render(); return; }
+    if (!country){ state.authError = 'Selecciona tu país.'; render(); return; }
+    if (!birthday){ state.authError = 'Indica tu fecha de nacimiento.'; render(); return; }
     state.authLoading = true;
     state.authError = null;
     render();
-    firebaseAuth.createUserWithEmailAndPassword(email, password).catch(function(e){
+    firebaseAuth.createUserWithEmailAndPassword(email, password).then(function(cred){
+      var uid = cred && cred.user && cred.user.uid;
+      if (uid && firestoreDb){
+        firestoreDb.doc('users/' + uid).set({ email: email, country: country, birthday: birthday, createdAt: Date.now() }).catch(function(e){
+          console.error('quizco save profile error', e);
+        });
+      }
+    }).catch(function(e){
       console.error('quizco email sign-up error', e);
       state.authLoading = false;
       state.authError = authErrorMessage(e);
