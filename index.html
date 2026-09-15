@@ -202,6 +202,7 @@
 <!-- Firebase (Firestore) da el marcador compartido en tiempo real fuera de Claude. -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 </head>
 <body>
 
@@ -222,6 +223,7 @@
     appId: "1:459232354822:web:3345cf4433f517d3c95987"
   };
   var firestoreDb = null;
+  var firebaseAuth = null;
   var DB_INIT_ERROR = null;
   if (typeof firebase === 'undefined') {
     DB_INIT_ERROR = 'No se ha podido cargar Firebase (el script externo de firebasejs no llegó a ejecutarse). Esto casi siempre significa que esta página se está viendo dentro de Claude (el entorno de Claude bloquea ese script por seguridad) en vez de ya desplegada fuera — ábrela como archivo local en tu navegador o, mejor, súbela a GitHub Pages y pruébala desde ahí.';
@@ -234,6 +236,15 @@
     } catch (e) {
       console.error('quizco firebase init error', e);
       DB_INIT_ERROR = 'Error al conectar con Firebase: ' + (e && e.message ? e.message : e);
+    }
+    // Auth is initialized separately so that an issue with it (or, in local
+    // testing, a mock that doesn't implement it) never blocks the Firestore
+    // scoreboard, which is the part the app can't run at all without.
+    try {
+      firebaseAuth = firebase.auth();
+    } catch (e) {
+      console.error('quizco auth init error', e);
+      firebaseAuth = null;
     }
   }
   // ====== FIN DE LA CONFIGURACIÓN ======
@@ -483,13 +494,29 @@
   }
   function lsGet(k, d){ try { var v = localStorage.getItem(k); return v===null ? d : v; } catch(e){ return d; } }
   function lsSet(k, v){ try { localStorage.setItem(k, v); } catch(e){} }
+  // Each entry is {id, name}. Older versions stored a plain array of code
+  // strings — those are transparently upgraded to {id: code, name: ''}.
   function getJoinedLeagues(){
-    try { var v = JSON.parse(lsGet('qc_leagues', '[]')); return Array.isArray(v) ? v : []; } catch(e){ return []; }
+    try {
+      var v = JSON.parse(lsGet('qc_leagues', '[]'));
+      if (!Array.isArray(v)) return [];
+      return v.map(function(item){
+        if (typeof item === 'string') return { id: item, name: '' };
+        return { id: item.id, name: item.name || '' };
+      });
+    } catch(e){ return []; }
   }
-  function addJoinedLeague(id){
+  function addJoinedLeague(id, name){
     if (!id) return;
     var list = getJoinedLeagues();
-    if (list.indexOf(id) === -1){ list.push(id); lsSet('qc_leagues', JSON.stringify(list)); }
+    var existing = null;
+    for (var i=0; i<list.length; i++){ if (list[i].id === id) { existing = list[i]; break; } }
+    if (existing){
+      if (name != null) existing.name = name;
+    } else {
+      list.push({ id: id, name: name || '' });
+    }
+    lsSet('qc_leagues', JSON.stringify(list));
   }
   function esc(s){ return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
   function initials(name){ return (name||'?').trim().slice(0,1).toUpperCase(); }
@@ -562,6 +589,10 @@
     dbChecked: false,
     dbRetryCount: 0,
     dbRetryScheduled: false,
+    authChecked: false,
+    authUser: null,
+    authLoading: false,
+    authError: null,
     playerId: lsGet('qc_pid', null) || uid(),
     playerName: lsGet('qc_name', ''),
     groupId: lsGet('qc_group', ''),
@@ -604,6 +635,7 @@
     seasonMetaUnsub: null,
     season: 1,
     currentSeasonDay: 1,
+    seasonStarted: true,
     seasonStarting: false,
     catchupLoading: false,
     catchupTargetDay: null,
@@ -613,6 +645,11 @@
     advanceTimeout: null,
     dailyResetHour: 0,
     pendingCreateHour: null,
+    leagueName: '',
+    pendingCreateName: null,
+    leagueCreatedBy: null,
+    leagueNameSaved: false,
+    leagueNameSavedTimeout: null,
     leaguesStep: 'list',
     chatReactionPickerFor: null,
     chatGifPickerOpen: false,
@@ -631,10 +668,62 @@
 
   function render(){
     var app = document.getElementById('app');
+    if (firebaseAuth && !state.authChecked) { app.innerHTML = dbErrorBanner() + '<div class="muted center mt24">Cargando…</div>'; return; }
+    if (firebaseAuth && !state.authUser) { app.innerHTML = dbErrorBanner() + loginScreen(); bindLoginScreen(); return; }
     if (!state.groupId) { app.innerHTML = dbErrorBanner() + onboardScreen(); bindOnboardScreen(); return; }
     if (!state.playerName) { app.innerHTML = dbErrorBanner() + nameScreen(); bindNameScreen(); return; }
     app.innerHTML = dbErrorBanner() + mainScreen();
     bindMainScreen();
+  }
+
+  function loginScreen(){
+    var name = state.authUser && state.authUser.displayName;
+    var html = '<div class="word mt24 center">Quiz<span class="amp">&amp;</span>Co</div>'
+      + '<div class="muted center mt8" style="margin-bottom:28px;">Inicia sesión para jugar con tu grupo.</div>'
+      + '<div class="card center">'
+      + '  <button class="btn btn-brand" id="googleSignInBtn" style="display:flex;align-items:center;justify-content:center;gap:10px;"' + (state.authLoading ? ' disabled' : '') + '>'
+      + googleIconSvg()
+      + '    <span>' + (state.authLoading ? 'Conectando…' : 'Continuar con Google') + '</span>'
+      + '  </button>'
+      + '</div>';
+    if (state.authError) html += '<div class="faint center mt16" style="color:var(--bad);">' + esc(state.authError) + '</div>';
+    return html;
+  }
+
+  function googleIconSvg(){
+    return '<svg width="18" height="18" viewBox="0 0 18 18" style="flex-shrink:0;">'
+      + '<path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"/>'
+      + '<path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.81.54-1.85.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.98v2.33A9 9 0 0 0 9 18z"/>'
+      + '<path fill="#FBBC05" d="M3.97 10.72A5.4 5.4 0 0 1 3.68 9c0-.6.1-1.18.29-1.72V4.95H.98A9 9 0 0 0 0 9c0 1.45.35 2.83.98 4.05l2.99-2.33z"/>'
+      + '<path fill="#EA4335" d="M9 3.58c1.32 0 2.51.46 3.44 1.35l2.59-2.59C13.46.89 11.43 0 9 0A9 9 0 0 0 .98 4.95l2.99 2.33C4.68 5.16 6.66 3.58 9 3.58z"/>'
+      + '</svg>';
+  }
+
+  function bindLoginScreen(){
+    var btn = document.getElementById('googleSignInBtn');
+    if (btn) btn.addEventListener('click', signInWithGoogle);
+  }
+
+  function signInWithGoogle(){
+    if (!firebaseAuth || state.authLoading) return;
+    state.authLoading = true;
+    state.authError = null;
+    render();
+    var provider = new firebase.auth.GoogleAuthProvider();
+    firebaseAuth.signInWithPopup(provider).catch(function(e){
+      console.error('quizco google sign-in error', e);
+      state.authLoading = false;
+      state.authError = (e && e.code === 'auth/popup-closed-by-user')
+        ? null
+        : 'No se ha podido iniciar sesión con Google. Inténtalo de nuevo.';
+      render();
+    });
+    // On success, onAuthStateChanged (see initAuth) picks it up and moves the app forward.
+  }
+
+  function signOutUser(){
+    if (!firebaseAuth) return;
+    firebaseAuth.signOut().catch(function(e){ console.error('quizco sign-out error', e); });
   }
 
   function onboardScreen(){
@@ -660,6 +749,7 @@
       + '<div class="muted center mt8" style="margin-bottom:20px;">Comparte este código con tu grupo para que se unan.</div>'
       + '<div class="card center">'
       + '  <div style="font-family:\'Bungee\',sans-serif;font-weight:400;font-size:32px;letter-spacing:0.06em;color:var(--brand);">' + esc(state.pendingCode) + '</div>'
+      + '  <input type="text" id="onboardLeagueName" class="mt16" placeholder="Nombre de la liga (opcional)" maxlength="30">'
       + hourPickerHtml('onboardHourSelect')
       + '  <button class="btn btn-brand mt16" id="confirmCreateBtn">Continuar</button>'
       + '</div>'
@@ -690,10 +780,12 @@
       var back = document.getElementById('backToWelcome1');
       if (confirmBtn) confirmBtn.addEventListener('click', function(){
         var sel = document.getElementById('onboardHourSelect');
+        var nameInp = document.getElementById('onboardLeagueName');
         state.pendingCreateHour = sel ? parseInt(sel.value, 10) : 9;
+        state.pendingCreateName = nameInp ? nameInp.value.trim().slice(0,30) : '';
         state.groupId = state.pendingCode;
         lsSet('qc_group', state.groupId);
-        addJoinedLeague(state.groupId);
+        addJoinedLeague(state.groupId, state.pendingCreateName);
         render();
       });
       if (back) back.addEventListener('click', function(e){ e.preventDefault(); state.onboardStep = 'welcome'; render(); });
@@ -720,12 +812,13 @@
   }
 
   function nameScreen(){
+    var suggested = (state.authUser && state.authUser.displayName) ? state.authUser.displayName.split(' ')[0] : '';
     return ''
       + '<div class="word mt24 center">Quiz<span class="amp">&amp;</span>Co</div>'
       + '<div class="muted center mt8">Liga <strong style="color:var(--brand);">' + esc(state.groupId) + '</strong></div>'
       + '<div class="muted center mt8" style="margin-bottom:28px;">¿Cómo te llamamos?</div>'
       + '<div class="card">'
-      + '  <input type="text" id="nameInput" placeholder="Tu nombre" maxlength="24">'
+      + '  <input type="text" id="nameInput" placeholder="Tu nombre" maxlength="24" value="' + esc(suggested) + '">'
       + '  <button class="btn btn-brand mt16" id="startBtn">Empezar a jugar</button>'
       + '</div>'
       + '<div class="center mt16"><a href="#" id="leaveGroupLink" class="faint">← Salir de esta liga</a></div>';
@@ -736,6 +829,7 @@
     var inp = document.getElementById('nameInput');
     var leave = document.getElementById('leaveGroupLink');
     inp.focus();
+    try { inp.select(); } catch(e){}
     function go(){
       var v = inp.value.trim();
       if (!v) return;
@@ -840,14 +934,79 @@
     return '<div class="daypicker">' + pills + '</div>';
   }
 
+  function lobbyScreen(){
+    var isCreator = !!state.leagueCreatedBy && state.playerId === state.leagueCreatedBy;
+    var members = state.members || [];
+    var html = '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">'
+      + '<div class="word" style="flex-shrink:0;">Quiz<span class="amp">&amp;</span>Co</div>'
+      + '<button class="btn btn-outline" id="lobbySettingsBtn" style="width:auto;display:inline-block;padding:8px 12px;flex-shrink:0;" aria-label="Ajustes">⚙️</button>'
+      + '</div>';
+    html += '<div class="word mt24 center">' + (state.leagueName ? esc(state.leagueName) : 'Tu liga') + '</div>';
+    html += '<div class="muted center mt8" style="margin-bottom:20px;">Comparte el código <strong style="color:var(--brand);">' + esc(state.groupId) + '</strong> con tu grupo para que se unan.</div>';
+    html += '<div class="card">';
+    html += '<div class="faint" style="font-weight:700;margin-bottom:8px;">Se han unido (' + members.length + ')</div>';
+    if (members.length){
+      members.forEach(function(m){
+        html += '<div class="row" style="padding:8px 10px;margin-bottom:6px;">'
+          + '<div class="avatar">' + esc(initials(m.playerName)) + '</div>'
+          + '<div style="flex:1;font-weight:700;">' + esc(m.playerName) + '</div>'
+          + '</div>';
+      });
+    } else {
+      html += '<div class="faint">Todavía nadie más se ha unido.</div>';
+    }
+    html += '</div>';
+    if (isCreator){
+      html += '<button class="btn btn-brand mt16" id="startLeagueBtn"' + (state.seasonStarting?' disabled':'') + '>'
+        + (state.seasonStarting ? 'Empezando…' : 'Iniciar liga →') + '</button>';
+      html += '<div class="faint center mt8">El día 1 se desbloqueará para todos en cuanto pulses aquí.</div>';
+    } else {
+      html += '<div class="muted center mt16">Esperando a que quien creó la liga pulse "Iniciar liga"…</div>';
+    }
+    html += '<div class="center mt16"><a href="#" id="switchLeagueLinkLobby" class="faint">Cambiar de liga</a></div>';
+    return html;
+  }
+
+  function bindLobby(){
+    var settingsBtn = document.getElementById('lobbySettingsBtn');
+    if (settingsBtn) settingsBtn.addEventListener('click', function(){ state.view = 'settings'; render(); });
+    var switchLink = document.getElementById('switchLeagueLinkLobby');
+    if (switchLink) switchLink.addEventListener('click', function(e){ e.preventDefault(); state.leaguesStep = 'list'; state.view = 'leagues'; render(); });
+    var startBtn = document.getElementById('startLeagueBtn');
+    if (startBtn) startBtn.addEventListener('click', startLeague);
+  }
+
+  function startLeague(){
+    if (!state.db || state.seasonStarting) return;
+    state.seasonStarting = true;
+    render();
+    state.db.doc(gpath('meta/season')).set({ startDate: effectiveDateStr(state.dailyResetHour), seasonNumber: 1, started: true }).then(function(){
+      return state.db.doc(gpath('chat/sys_' + Date.now())).set({
+        system: true, text: state.playerName + ' ha iniciado la liga 🎉',
+        ts: new Date().toISOString()
+      });
+    }).catch(function(e){
+      console.error('quizco start league error', e);
+    }).then(function(){
+      state.seasonStarting = false;
+      // The live meta/season listener will pick up the change and move
+      // everyone out of the lobby on its own.
+      render();
+    });
+  }
+
   function mainScreen(){
+    if (state.view === 'lobby') return lobbyScreen();
     var html = '';
     html += '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">'
       + '<div class="word" style="flex-shrink:0;">Quiz<span class="amp">&amp;</span>Co</div>'
       + '<button class="btn btn-outline" id="settingsBtn" style="width:auto;display:inline-block;padding:8px 12px;flex-shrink:0;" aria-label="Ajustes">⚙️</button>'
       + '</div>';
+    var leagueLabel = state.leagueName
+      ? esc(state.leagueName) + ' (' + esc(state.groupId) + ')'
+      : 'Liga ' + esc(state.groupId);
     html += '<div class="faint" id="whoami" style="margin-top:6px;overflow-wrap:break-word;">'
-      + '<a href="#" id="switchLeagueLink">Liga ' + esc(state.groupId) + ' ▾</a>'
+      + '<a href="#" id="switchLeagueLink">' + leagueLabel + ' ▾</a>'
       + ' · ' + esc(state.playerName) + ' · <a href="#" id="changeName">cambiar</a>'
       + '</div>';
     html += '<div class="tabs">'
@@ -1824,7 +1983,22 @@
   function settingsScreen(){
     var notif = lsGet('qc_notif_enabled', '0') === '1';
     var html = '<div class="muted mb16" style="font-weight:800;">Ajustes</div>';
-    html += '<div class="card">';
+    if (state.authUser){
+      html += '<div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:10px;">';
+      html += '<div style="min-width:0;"><div style="font-weight:700;font-size:14px;">Cuenta</div>'
+        + '<div class="faint" style="margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(state.authUser.displayName || 'Sesión de Google') + '</div></div>';
+      html += '<button class="btn btn-outline" id="signOutBtn" style="width:auto;display:inline-block;padding:8px 14px;flex-shrink:0;">Cerrar sesión</button>';
+      html += '</div>';
+    }
+    html += '<div class="card mt16">';
+    html += '<div style="font-weight:700;font-size:14px;">Nombre de la liga</div>';
+    html += '<div class="faint" style="margin-top:2px;margin-bottom:8px;">Código para invitar: ' + esc(state.groupId) + '</div>';
+    html += '<input type="text" id="leagueNameInput" placeholder="Nombre de la liga" maxlength="30" value="' + esc(state.leagueName || '') + '">';
+    html += '<div style="display:flex;align-items:center;gap:10px;margin-top:8px;">';
+    html += '<button class="btn btn-brand" id="saveLeagueNameBtn" style="width:auto;display:inline-block;padding:8px 14px;">Guardar</button>';
+    if (state.leagueNameSaved) html += '<span class="faint">Guardado ✓</span>';
+    html += '</div></div>';
+    html += '<div class="card mt16">';
     html += '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">';
     html += '<div><div style="font-weight:700;font-size:14px;">Notificaciones</div><div class="faint" style="margin-top:2px;">Aviso cuando toque jugar. Próximamente.</div></div>';
     html += '<button class="btn ' + (notif?'btn-brand':'btn-outline') + '" id="toggleNotifBtn" style="width:auto;display:inline-block;padding:8px 14px;flex-shrink:0;">' + (notif?'Activadas':'Desactivadas') + '</button>';
@@ -1842,12 +2016,47 @@
   }
 
   function bindSettings(){
+    var signOutBtn = document.getElementById('signOutBtn');
+    if (signOutBtn) signOutBtn.addEventListener('click', function(){
+      teardownSessionListeners();
+      state.playerName = '';
+      state.view = 'home';
+      state.allDocs = null;
+      state.members = null;
+      state.desempateMeta = null;
+      state.desempateAnswers = null;
+      state.desempateStartTs = null;
+      state.desempateSubmitting = false;
+      state.desempateUnlocking = false;
+      state.chatMessages = null;
+      state.db = null;
+      signOutUser();
+    });
     var toggle = document.getElementById('toggleNotifBtn');
     if (toggle) toggle.addEventListener('click', function(){
       var cur = lsGet('qc_notif_enabled','0') === '1';
       lsSet('qc_notif_enabled', cur ? '0' : '1');
       render();
     });
+    var saveNameBtn = document.getElementById('saveLeagueNameBtn');
+    var nameInput = document.getElementById('leagueNameInput');
+    if (saveNameBtn && nameInput){
+      saveNameBtn.addEventListener('click', function(){
+        var v = nameInput.value.trim().slice(0, 30);
+        state.leagueName = v;
+        addJoinedLeague(state.groupId, v);
+        if (state.db){
+          state.db.doc(gpath('meta/config')).set({ dailyResetHour: state.dailyResetHour, leagueName: v, createdBy: state.leagueCreatedBy }).catch(function(e){
+            console.error('quizco league name save error', e);
+          });
+        }
+        state.leagueNameSaved = true;
+        if (state.leagueNameSavedTimeout) clearTimeout(state.leagueNameSavedTimeout);
+        state.leagueNameSavedTimeout = setTimeout(function(){ state.leagueNameSaved = false; render(); }, 2000);
+        render();
+      });
+      nameInput.addEventListener('keydown', function(e){ if (e.key === 'Enter') saveNameBtn.click(); });
+    }
     var back = document.getElementById('backFromSettings');
     if (back) back.addEventListener('click', function(e){ e.preventDefault(); showHome(); });
   }
@@ -1860,13 +2069,20 @@
 
   function leaguesListScreen(){
     var leagues = getJoinedLeagues();
-    if (leagues.indexOf(state.groupId) === -1) leagues.push(state.groupId);
+    if (!leagues.some(function(l){ return l.id === state.groupId; })){
+      leagues.push({ id: state.groupId, name: state.leagueName || '' });
+    }
     var html = '<div class="muted mb16" style="font-weight:800;">Tus ligas</div>';
-    leagues.forEach(function(id){
-      var active = id === state.groupId;
-      html += '<div class="row' + (active?' me':'') + '" data-league="' + esc(id) + '" style="cursor:pointer;">'
+    leagues.forEach(function(l){
+      var active = l.id === state.groupId;
+      var displayName = active ? (state.leagueName || l.name) : l.name;
+      html += '<div class="row' + (active?' me':'') + '" data-league="' + esc(l.id) + '" style="cursor:pointer;">'
         + '<div class="avatar">🏆</div>'
-        + '<div style="flex:1;font-weight:700;">' + esc(id) + '</div>'
+        + '<div style="flex:1;">'
+        + (displayName
+            ? '<div style="font-weight:700;">' + esc(displayName) + '</div><div class="faint" style="font-size:11px;">' + esc(l.id) + '</div>'
+            : '<div style="font-weight:700;">' + esc(l.id) + '</div>')
+        + '</div>'
         + (active ? '<div class="faint">actual</div>' : '')
         + '</div>';
     });
@@ -1885,6 +2101,7 @@
       + '<div class="card center">'
       + '<div style="font-family:\'Bungee\',sans-serif;font-weight:400;font-size:28px;letter-spacing:0.06em;color:var(--brand);">' + esc(state.pendingCode) + '</div>'
       + '<div class="muted mt8">Comparte este código con tu grupo.</div>'
+      + '<input type="text" id="newLeagueName" class="mt16" placeholder="Nombre de la liga (opcional)" maxlength="30">'
       + hourPickerHtml('newLeagueHour')
       + '<button class="btn btn-brand mt16" id="confirmNewLeagueBtn">Crear liga</button>'
       + '</div>'
@@ -1914,12 +2131,14 @@
     state.groupId = id;
     lsSet('qc_group', id);
     lsSet('qc_day', '1');
-    addJoinedLeague(id);
+    addJoinedLeague(id, (opts.leagueName != null) ? opts.leagueName : undefined);
     state.pendingCreateHour = (opts.dailyResetHour != null) ? opts.dailyResetHour : null;
+    state.pendingCreateName = (opts.leagueName != null) ? opts.leagueName : null;
     state.allDocs = null; state.members = null; state.chatMessages = null;
     state.desempateMeta = null; state.desempateAnswers = null; state.desempateStartTs = null;
     state.desempateSubmitting = false; state.desempateUnlocking = false;
     state.seasonMeta = null; state.season = 1; state.currentSeasonDay = 1; state.dailyResetHour = 0;
+    state.leagueName = '';
     state.day = 1;
     state.submittedDoc = null; state.leaderboard = null; state.answers = {}; state.quizStarted = false;
     state.currentQ = 0; state.locked = false; state.checking = true;
@@ -1956,9 +2175,11 @@
     var confirm = document.getElementById('confirmNewLeagueBtn');
     if (confirm) confirm.addEventListener('click', function(){
       var sel = document.getElementById('newLeagueHour');
+      var nameInp = document.getElementById('newLeagueName');
       var hour = sel ? parseInt(sel.value, 10) : 9;
+      var name = nameInp ? nameInp.value.trim().slice(0,30) : '';
       var code = state.pendingCode;
-      activateLeague(code, { dailyResetHour: hour });
+      activateLeague(code, { dailyResetHour: hour, leagueName: name });
     });
   }
 
@@ -1985,20 +2206,7 @@
     var change = document.getElementById('changeName');
     if (change) change.addEventListener('click', function(e){
       e.preventDefault();
-      if (state.unsub) { state.unsub(); state.unsub = null; }
-      if (state.rankingUnsub) { state.rankingUnsub(); state.rankingUnsub = null; }
-      if (state.membersUnsub) { state.membersUnsub(); state.membersUnsub = null; }
-      if (state.desempateUnsub) { state.desempateUnsub(); state.desempateUnsub = null; }
-      if (state.desempateAnswersUnsub) { state.desempateAnswersUnsub(); state.desempateAnswersUnsub = null; }
-      if (state.chatUnsub) { state.chatUnsub(); state.chatUnsub = null; }
-      if (state.wildcardTimeout) { clearTimeout(state.wildcardTimeout); state.wildcardTimeout = null; }
-      if (state.catchupTimeout) { clearTimeout(state.catchupTimeout); state.catchupTimeout = null; }
-      if (state.dayLockNoticeTimeout) { clearTimeout(state.dayLockNoticeTimeout); state.dayLockNoticeTimeout = null; }
-      if (state.advanceTimeout) { clearTimeout(state.advanceTimeout); state.advanceTimeout = null; }
-      state.catchupLoading = false;
-      state.catchupTargetDay = null;
-      state.dayLockNotice = null;
-      stopQuizTimer();
+      teardownSessionListeners();
       state.playerName = '';
       state.view = 'home';
       state.allDocs = null;
@@ -2028,6 +2236,7 @@
     if (state.view === 'chat'){ bindChat(); return; }
     if (state.view === 'settings'){ bindSettings(); return; }
     if (state.view === 'leagues'){ bindLeagues(); return; }
+    if (state.view === 'lobby'){ bindLobby(); return; }
     var pills = document.querySelectorAll('.daypill');
     pills.forEach(function(p){
       p.addEventListener('click', function(){
@@ -2159,6 +2368,7 @@
   }
 
   function enterStatsView(view){
+    if (view !== 'lobby' && !state.seasonStarted) view = 'lobby';
     var wasInGroupView = state.view === 'home' || state.view === 'ranking' || state.view === 'chapas' || state.view === 'chat';
     state.view = view;
     stopQuizTimer();
@@ -2239,6 +2449,24 @@
     if (state.desempateUnsub) { state.desempateUnsub(); state.desempateUnsub = null; }
     if (state.desempateAnswersUnsub) { state.desempateAnswersUnsub(); state.desempateAnswersUnsub = null; }
     if (state.chatUnsub) { state.chatUnsub(); state.chatUnsub = null; }
+  }
+
+  // Shared cleanup for "change name" and "sign out": tears down every live
+  // Firestore listener and pending timer for the current session so nothing
+  // keeps running (or fires a stray render()) against a session that's about
+  // to be abandoned.
+  function teardownSessionListeners(){
+    if (state.unsub) { state.unsub(); state.unsub = null; }
+    if (state.seasonMetaUnsub) { state.seasonMetaUnsub(); state.seasonMetaUnsub = null; }
+    teardownGroupListeners();
+    if (state.wildcardTimeout) { clearTimeout(state.wildcardTimeout); state.wildcardTimeout = null; }
+    if (state.catchupTimeout) { clearTimeout(state.catchupTimeout); state.catchupTimeout = null; }
+    if (state.dayLockNoticeTimeout) { clearTimeout(state.dayLockNoticeTimeout); state.dayLockNoticeTimeout = null; }
+    if (state.advanceTimeout) { clearTimeout(state.advanceTimeout); state.advanceTimeout = null; }
+    state.catchupLoading = false;
+    state.catchupTargetDay = null;
+    state.dayLockNotice = null;
+    stopQuizTimer();
   }
 
   function showHome(){ enterStatsView('home'); }
@@ -2337,18 +2565,27 @@
       if (snap.exists){
         var data = snap.data();
         state.dailyResetHour = (data.dailyResetHour != null) ? data.dailyResetHour : 0;
-      } else if (state.pendingCreateHour != null){
-        state.dailyResetHour = state.pendingCreateHour;
-        ref.set({ dailyResetHour: state.dailyResetHour }).catch(function(e){ console.error('quizco config set error', e); });
+        state.leagueName = data.leagueName || '';
+        state.leagueCreatedBy = data.createdBy || null;
+      } else if (state.pendingCreateHour != null || (state.pendingCreateName != null && state.pendingCreateName !== '')){
+        state.dailyResetHour = (state.pendingCreateHour != null) ? state.pendingCreateHour : 0;
+        state.leagueName = state.pendingCreateName || '';
+        state.leagueCreatedBy = state.playerId;
+        ref.set({ dailyResetHour: state.dailyResetHour, leagueName: state.leagueName, createdBy: state.playerId }).catch(function(e){ console.error('quizco config set error', e); });
       } else {
         state.dailyResetHour = 0;
+        state.leagueName = '';
+        state.leagueCreatedBy = null;
       }
+      addJoinedLeague(state.groupId, state.leagueName);
       state.pendingCreateHour = null;
+      state.pendingCreateName = null;
       cb();
     }).catch(function(e){
       console.error('quizco config get error', e);
       if (e && e.code === 'permission-denied' && retryDbInitOnce()) return;
       state.dailyResetHour = (state.dailyResetHour != null) ? state.dailyResetHour : 0;
+      state.leagueName = state.leagueName || '';
       cb();
     });
   }
@@ -2361,6 +2598,7 @@
     function applySnapshotData(data){
       state.seasonMeta = data;
       state.season = data.seasonNumber || 1;
+      state.seasonStarted = (data.started !== false);
       state.currentSeasonDay = computeCurrentSeasonDay();
     }
 
@@ -2375,9 +2613,16 @@
       if (snap.exists){
         applySnapshotData(snap.data());
       } else {
+        // Brand-new league: don't auto-start it. It sits unstarted (no
+        // startDate yet) until whoever created it presses "Iniciar liga" —
+        // see startLeague(). Leagues created before this feature already
+        // have a meta/season doc with a startDate and no `started` field,
+        // so applySnapshotData's `!== false` check treats them as already
+        // started and they never hit this branch.
         state.season = 1;
-        state.seasonMeta = { startDate: effectiveDateStr(state.dailyResetHour), seasonNumber: 1 };
-        state.currentSeasonDay = computeCurrentSeasonDay();
+        state.seasonStarted = false;
+        state.seasonMeta = { seasonNumber: 1, started: false };
+        state.currentSeasonDay = 1;
         ref.set(state.seasonMeta).catch(function(e){ console.error('quizco season meta set error', e); });
       }
       state.day = state.currentSeasonDay;
@@ -2387,10 +2632,12 @@
       state.seasonMetaUnsub = ref.onSnapshot(function(snap2){
         if (!snap2.exists) return; // still seeding, or a stale delivery — get() above already covered us
         var prevSeason = state.season;
+        var prevStarted = state.seasonStarted;
         applySnapshotData(snap2.data());
         if (first){ first = false; return; }
-        if (prevSeason !== state.season){
-          // Someone started a new season while we were connected — jump everyone there.
+        if (prevSeason !== state.season || (!prevStarted && state.seasonStarted)){
+          // Someone started a new season (or just started the league for the
+          // first time) while we were connected — jump everyone there.
           state.day = state.currentSeasonDay;
           state.allDocs = null;
           state.desempateMeta = null;
@@ -2398,11 +2645,12 @@
           state.desempateStartTs = null;
           state.desempateSubmitting = false;
           state.desempateUnlocking = false;
-          if (state.view === 'quiz'){
+          var targetView = (state.view === 'lobby') ? 'home' : state.view;
+          if (targetView === 'quiz'){
             loadDay(state.day);
           } else {
             teardownGroupListeners();
-            enterStatsView(state.view);
+            enterStatsView(targetView);
           }
         } else {
           render();
@@ -2414,6 +2662,7 @@
       console.error('quizco season meta get error', e);
       if (e && e.code === 'permission-denied' && retryDbInitOnce()) return;
       state.season = 1;
+      state.seasonStarted = true;
       state.currentSeasonDay = computeCurrentSeasonDay();
       state.day = state.currentSeasonDay;
       cb();
@@ -2470,7 +2719,9 @@
     registerMember();
     loadGroupConfig(function(){
       subscribeSeasonMeta(function(){
-        if (state.view === 'quiz') {
+        if (!state.seasonStarted){
+          enterStatsView('lobby');
+        } else if (state.view === 'quiz') {
           loadDay(state.day);
         } else {
           enterStatsView(state.view);
@@ -2479,12 +2730,44 @@
     });
   }
 
+  function initAuth(){
+    if (!firebaseAuth){
+      // Firebase itself failed to load/init (see DB_INIT_ERROR) — nothing to
+      // gate on, so don't block the app behind a login screen that could
+      // never be completed.
+      state.authChecked = true;
+      render();
+      if (state.groupId && state.playerName) setTimeout(initDb, 250);
+      return;
+    }
+    firebaseAuth.onAuthStateChanged(function(user){
+      var wasChecked = state.authChecked;
+      state.authChecked = true;
+      state.authLoading = false;
+      if (user){
+        state.authUser = { uid: user.uid, displayName: user.displayName || '', photoURL: user.photoURL || '' };
+        state.playerId = user.uid;
+        lsSet('qc_pid', user.uid);
+      } else {
+        state.authUser = null;
+      }
+      render();
+      // Returning visitor who was already signed in and already had a
+      // league + name picked from a previous session: resume straight into
+      // the game. A brand-new sign-in mid-session instead flows through
+      // onboarding/nameScreen, which call initDb() themselves once ready.
+      if (!wasChecked && state.authUser && state.groupId && state.playerName){
+        setTimeout(initDb, 250);
+      }
+    }, function(err){
+      console.error('quizco auth state error', err);
+      state.authChecked = true;
+      render();
+    });
+  }
+
   render();
-  // Small deliberate delay before the first Firestore call: gives the SDK's
-  // internal setup a beat to finish, which avoids the startup race above in
-  // the common case (the retry above is the safety net for when it isn't
-  // enough, e.g. on a slower phone).
-  if (state.groupId && state.playerName) setTimeout(initDb, 250);
+  initAuth();
 })();
 </script>
 
