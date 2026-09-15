@@ -164,6 +164,23 @@
   .chatsend { flex-shrink: 0; background: var(--brand); color: var(--ink); border: 2.5px solid var(--ink); border-radius: 10px; padding: 0 18px; font-weight: 700; font-size: 14px; cursor: pointer; box-shadow: 3px 3px 0 var(--shadow); }
   .chatsend:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--shadow); }
   .chatsend:disabled { opacity: 0.4; cursor: default; }
+  .chatimg { display: block; max-width: 220px; max-height: 220px; width: 100%; border-radius: 8px; }
+  .chaticonbtn { flex-shrink: 0; background: var(--surface); color: var(--ink); border: 2.5px solid var(--ink); border-radius: 10px; padding: 0 12px; font-weight: 700; font-size: 15px; cursor: pointer; box-shadow: 3px 3px 0 var(--shadow); }
+  .chaticonbtn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--shadow); }
+  .chaticonbtn:disabled { opacity: 0.4; cursor: default; }
+  .gifgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-height: 55vh; overflow-y: auto; padding: 2px; }
+  .gifthumb { border: 2px solid var(--line); border-radius: 8px; overflow: hidden; cursor: pointer; aspect-ratio: 1 / 1; background: var(--surface); }
+  .gifthumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .gifthumb:active { border-color: var(--ink); }
+  .chatmsgwrap { position: relative; }
+  .reactionbar { position: absolute; top: 100%; margin-top: 4px; left: 36px; display: flex; gap: 2px; background: var(--surface); border: 2px solid var(--ink); border-radius: 999px; padding: 4px 6px; box-shadow: 3px 3px 0 var(--shadow); z-index: 5; }
+  .reactionbar.me { left: auto; right: 0; }
+  .reactionbtn { font-size: 19px; background: none; border: none; cursor: pointer; padding: 2px 4px; line-height: 1; }
+  .reactionbtn:active { transform: scale(1.25); }
+  .msgreactions { display: flex; gap: 4px; margin-top: 4px; margin-left: 36px; flex-wrap: wrap; }
+  .msgreactions.me { justify-content: flex-end; margin-left: 0; margin-right: 36px; }
+  .reactionchip { font-size: 12px; background: var(--surface); border: 1.5px solid var(--line); border-radius: 999px; padding: 1px 7px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; }
+  .reactionchip.mine { border-color: var(--ink); background: var(--brand-tint); font-weight: 700; }
   @media (max-width: 380px) {
     .wrap { padding: 18px 12px 48px; }
     .word { font-size: 18px; }
@@ -220,6 +237,14 @@
     }
   }
   // ====== FIN DE LA CONFIGURACIÓN ======
+
+  // ====== CLAVE DE GIPHY (para buscar GIFs en el chat) ======
+  // La sacas gratis en https://developers.giphy.com/ → "Create an App" → API Key.
+  // Mientras esté en "TU_GIPHY_KEY" el buscador de GIFs mostrará un aviso en vez de resultados.
+  var GIPHY_API_KEY = '3DGSr6lmbmM47SE2szeR1lFJLJLEGcmQ';
+  // ====== FIN CLAVE DE GIPHY ======
+
+  var REACTION_EMOJIS = ['❤️', '😂', '👍', '😢', '😡'];
 
   var CATS = [
     {key:'geo', name:'Geografía', c:'--c-geo', ct:'--c-geo-tint'},
@@ -588,7 +613,13 @@
     advanceTimeout: null,
     dailyResetHour: 0,
     pendingCreateHour: null,
-    leaguesStep: 'list'
+    leaguesStep: 'list',
+    chatReactionPickerFor: null,
+    chatGifPickerOpen: false,
+    chatGifQuery: '',
+    chatGifResults: null,
+    chatGifLoading: false,
+    chatGifError: null
   };
   lsSet('qc_pid', state.playerId);
   if (state.groupId) addJoinedLeague(state.groupId);
@@ -1171,6 +1202,7 @@
     if (!state.db) {
       return '<div class="faint mt16">El chat necesita el marcador compartido, que no se ha podido conectar en esta vista.</div>';
     }
+    if (state.chatGifPickerOpen) return gifPickerScreen();
     if (!state.chatMessages) {
       return '<div class="muted center mt24">Cargando…</div>';
     }
@@ -1186,15 +1218,43 @@
         return;
       }
       var isMe = m.playerId === state.playerId;
-      html += '<div class="chatmsg' + (isMe ? ' me' : '') + '">';
+      var msgId = m.id || '';
+      html += '<div class="chatmsgwrap">';
+      if (state.chatReactionPickerFor === msgId){
+        html += '<div class="reactionbar' + (isMe ? ' me' : '') + '">';
+        REACTION_EMOJIS.forEach(function(e){
+          html += '<button class="reactionbtn" data-emoji="' + e + '" data-msgid="' + esc(msgId) + '">' + e + '</button>';
+        });
+        html += '</div>';
+      }
+      html += '<div class="chatmsg' + (isMe ? ' me' : '') + '" data-msgid="' + esc(msgId) + '">';
       html += '<div class="avatar">' + esc(initials(m.playerName)) + '</div>';
       html += '<div class="chatbubble">';
       if (!isMe) html += '<div class="chatname">' + esc(m.playerName) + '</div>';
-      html += '<div class="chattext">' + esc(m.text) + '</div>';
+      if ((m.type === 'image' && m.imageUrl) || (m.type === 'gif' && m.gifUrl)){
+        html += '<img class="chatimg' + (m.type === 'gif' ? ' chatgif' : '') + '" src="' + esc(m.imageUrl || m.gifUrl) + '" alt="' + (m.type === 'gif' ? 'gif' : 'foto') + '" loading="lazy">';
+      } else {
+        html += '<div class="chattext">' + esc(m.text) + '</div>';
+      }
       html += '</div></div>';
+      var counts = {};
+      if (m.reactions){
+        Object.keys(m.reactions).forEach(function(pid){ var e = m.reactions[pid]; counts[e] = (counts[e] || 0) + 1; });
+      }
+      var emojiKeys = Object.keys(counts);
+      if (emojiKeys.length){
+        html += '<div class="msgreactions' + (isMe ? ' me' : '') + '">';
+        emojiKeys.forEach(function(e){
+          var mine = m.reactions && m.reactions[state.playerId] === e;
+          html += '<span class="reactionchip' + (mine ? ' mine' : '') + '" data-emoji="' + e + '" data-msgid="' + esc(msgId) + '">' + e + ' ' + counts[e] + '</span>';
+        });
+        html += '</div>';
+      }
+      html += '</div>';
     });
     html += '</div>';
     html += '<div class="chatinputrow">'
+      + '<button class="chaticonbtn" id="chatGifBtn" title="Enviar GIF">GIF</button>'
       + '<input type="text" id="chatInput" placeholder="Escribe un mensaje…" maxlength="240" value="' + esc(state.chatDraft || '') + '">'
       + '<button class="chatsend" id="chatSendBtn">Enviar</button>'
       + '</div>';
@@ -1202,10 +1262,12 @@
   }
 
   function bindChat(){
+    if (state.chatGifPickerOpen) { bindGifPicker(); return; }
     var list = document.getElementById('chatList');
     if (list) list.scrollTop = list.scrollHeight;
     var input = document.getElementById('chatInput');
     var sendBtn = document.getElementById('chatSendBtn');
+    var gifBtn = document.getElementById('chatGifBtn');
     function send(){
       if (!input || !state.db) return;
       var v = input.value.trim();
@@ -1230,6 +1292,189 @@
       }
     }
     if (sendBtn) sendBtn.addEventListener('click', send);
+    if (gifBtn){
+      gifBtn.addEventListener('click', function(){
+        state.chatGifPickerOpen = true;
+        render();
+        if (state.chatGifResults === null) searchGifs('');
+      });
+    }
+
+    var i, reactionBtns = document.querySelectorAll('.reactionbtn');
+    for (i = 0; i < reactionBtns.length; i++){
+      (function(btn){
+        btn.addEventListener('click', function(e){
+          e.stopPropagation();
+          setReaction(btn.getAttribute('data-msgid'), btn.getAttribute('data-emoji'));
+        });
+      })(reactionBtns[i]);
+    }
+    var chips = document.querySelectorAll('.reactionchip');
+    for (i = 0; i < chips.length; i++){
+      (function(chip){
+        chip.addEventListener('click', function(e){
+          e.stopPropagation();
+          setReaction(chip.getAttribute('data-msgid'), chip.getAttribute('data-emoji'));
+        });
+      })(chips[i]);
+    }
+    var msgEls = document.querySelectorAll('.chatmsg[data-msgid]');
+    var pressTimer = null;
+    var pressMoved = false;
+    function startPress(msgId){
+      if (!msgId) return;
+      pressMoved = false;
+      pressTimer = setTimeout(function(){
+        if (!pressMoved){ state.chatReactionPickerFor = msgId; render(); }
+      }, 500);
+    }
+    function cancelPress(){ if (pressTimer){ clearTimeout(pressTimer); pressTimer = null; } }
+    for (i = 0; i < msgEls.length; i++){
+      (function(el){
+        var msgId = el.getAttribute('data-msgid');
+        el.addEventListener('mousedown', function(){ startPress(msgId); });
+        el.addEventListener('touchstart', function(){ startPress(msgId); }, { passive: true });
+        el.addEventListener('mouseup', cancelPress);
+        el.addEventListener('mouseleave', cancelPress);
+        el.addEventListener('touchend', cancelPress);
+        el.addEventListener('touchmove', function(){ pressMoved = true; cancelPress(); }, { passive: true });
+        el.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+      })(msgEls[i]);
+    }
+    if (state.chatReactionPickerFor){
+      setTimeout(function(){
+        document.addEventListener('click', function closeReactionBar(e){
+          if (!e.target.closest || !e.target.closest('.reactionbar')){
+            state.chatReactionPickerFor = null;
+            render();
+          }
+        }, { once: true });
+      }, 0);
+    }
+  }
+
+  function setReaction(msgId, emoji){
+    if (!state.db || !msgId) return;
+    var msg = (state.chatMessages || []).find(function(m){ return m.id === msgId; });
+    var newReactions = Object.assign({}, (msg && msg.reactions) || {});
+    if (newReactions[state.playerId] === emoji){
+      delete newReactions[state.playerId];
+    } else {
+      newReactions[state.playerId] = emoji;
+    }
+    state.db.doc(gpath('chat/' + msgId)).update({ reactions: newReactions }).catch(function(e){
+      console.error('quizco chat reaction error', e);
+    });
+    state.chatReactionPickerFor = null;
+    render();
+  }
+
+  function gifPickerScreen(){
+    var html = '<div class="muted mb16" style="font-weight:800;">Buscar GIF</div>';
+    html += '<div class="center mb16"><a href="#" id="closeGifPicker" class="faint">← Volver al chat</a></div>';
+    if (!GIPHY_API_KEY || GIPHY_API_KEY === 'TU_GIPHY_KEY'){
+      html += '<div class="card" style="border-color:var(--bad);background:var(--bad-tint);color:var(--bad);font-weight:700;font-size:13px;">⚠️ Falta configurar la clave de Giphy (variable GIPHY_API_KEY al principio del archivo).</div>';
+      return html;
+    }
+    html += '<div class="chatinputrow" style="margin-bottom:14px;">'
+      + '<input type="text" id="gifSearchInput" placeholder="Buscar en Giphy…" value="' + esc(state.chatGifQuery || '') + '">'
+      + '<button class="chatsend" id="gifSearchBtn">Buscar</button>'
+      + '</div>';
+    if (state.chatGifLoading){
+      html += '<div class="muted center mt24">Buscando…</div>';
+      return html;
+    }
+    if (state.chatGifError){
+      html += '<div class="faint center mt16">' + esc(state.chatGifError) + '</div>';
+    }
+    if (state.chatGifResults && state.chatGifResults.length){
+      html += '<div class="gifgrid">';
+      state.chatGifResults.forEach(function(g, i){
+        html += '<div class="gifthumb" data-gifidx="' + i + '"><img src="' + esc(g.thumb) + '" alt="gif" loading="lazy"></div>';
+      });
+      html += '</div>';
+    } else if (state.chatGifResults){
+      html += '<div class="faint center mt24">Sin resultados. Prueba otra búsqueda.</div>';
+    }
+    return html;
+  }
+
+  function bindGifPicker(){
+    var closeLink = document.getElementById('closeGifPicker');
+    if (closeLink) closeLink.addEventListener('click', function(e){
+      e.preventDefault();
+      state.chatGifPickerOpen = false;
+      state.chatGifResults = null;
+      state.chatGifQuery = '';
+      state.chatGifError = null;
+      render();
+    });
+    var input = document.getElementById('gifSearchInput');
+    var searchBtn = document.getElementById('gifSearchBtn');
+    function doSearch(){
+      var q = input ? input.value.trim() : '';
+      state.chatGifQuery = q;
+      searchGifs(q);
+    }
+    if (input){
+      input.addEventListener('input', function(){ state.chatGifQuery = input.value; });
+      input.addEventListener('keydown', function(e){ if (e.key === 'Enter') doSearch(); });
+      input.focus();
+      var len = input.value.length;
+      try { input.setSelectionRange(len, len); } catch(e){}
+    }
+    if (searchBtn) searchBtn.addEventListener('click', doSearch);
+    var thumbs = document.querySelectorAll('[data-gifidx]');
+    for (var i = 0; i < thumbs.length; i++){
+      (function(el){
+        el.addEventListener('click', function(){
+          var idx = parseInt(el.getAttribute('data-gifidx'), 10);
+          var g = state.chatGifResults && state.chatGifResults[idx];
+          if (g) sendGifMessage(g.full);
+        });
+      })(thumbs[i]);
+    }
+  }
+
+  function searchGifs(query){
+    if (!GIPHY_API_KEY || GIPHY_API_KEY === 'TU_GIPHY_KEY') { render(); return; }
+    state.chatGifLoading = true;
+    state.chatGifError = null;
+    render();
+    var endpoint = query
+      ? 'https://api.giphy.com/v1/gifs/search?api_key=' + encodeURIComponent(GIPHY_API_KEY) + '&q=' + encodeURIComponent(query) + '&limit=24&rating=pg-13&lang=es'
+      : 'https://api.giphy.com/v1/gifs/trending?api_key=' + encodeURIComponent(GIPHY_API_KEY) + '&limit=24&rating=pg-13';
+    fetch(endpoint).then(function(r){
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(function(data){
+      state.chatGifLoading = false;
+      state.chatGifResults = (data.data || []).map(function(g){
+        var imgs = g.images || {};
+        var thumbImg = imgs.fixed_width_small || imgs.fixed_width || imgs.original || {};
+        var fullImg = imgs.fixed_width || imgs.original || {};
+        return { thumb: thumbImg.url, full: fullImg.url };
+      }).filter(function(g){ return g.thumb && g.full; });
+      render();
+    }).catch(function(e){
+      console.error('quizco giphy search error', e);
+      state.chatGifLoading = false;
+      state.chatGifError = 'No se han podido buscar GIFs ahora mismo.';
+      render();
+    });
+  }
+
+  function sendGifMessage(url){
+    if (!state.db) return;
+    var msgId = state.playerId + '_' + Date.now();
+    state.db.doc(gpath('chat/' + msgId)).set({
+      playerId: state.playerId, playerName: state.playerName,
+      type: 'gif', gifUrl: url, text: '🎬 GIF', ts: new Date().toISOString()
+    }).catch(function(e){ console.error('quizco chat gif send error', e); });
+    state.chatGifPickerOpen = false;
+    state.chatGifResults = null;
+    state.chatGifQuery = '';
+    render();
   }
 
   function computeSeasonBadges(allDocs, desempateBonusMap){
@@ -1975,7 +2220,7 @@
     }
     if (!state.chatUnsub){
       state.chatUnsub = state.db.collection(gpath('chat')).onSnapshot(function(snap){
-        state.chatMessages = snap.docs.map(function(d){ return d.data(); });
+        state.chatMessages = snap.docs.map(function(d){ var data = d.data() || {}; data.id = d.id; return data; });
         render();
       }, function(err){
         console.error('quizco chat error', err);
