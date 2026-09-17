@@ -739,8 +739,9 @@
     if (!state.groupId) { document.body.classList.remove('has-bottomnav'); app.innerHTML = dbErrorBanner() + onboardScreen(); bindOnboardScreen(); return; }
     if (!state.playerName) { document.body.classList.remove('has-bottomnav'); app.innerHTML = dbErrorBanner() + nameScreen(); bindNameScreen(); return; }
     app.innerHTML = dbErrorBanner() + mainScreen();
-    // The lobby (waiting room) has no tab bar — only the started league does.
-    document.body.classList.toggle('has-bottomnav', state.view !== 'lobby');
+    // The lobby (waiting room) and the "Tus ligas" picker have no tab bar —
+    // only a league you've actually stepped into does.
+    document.body.classList.toggle('has-bottomnav', state.view !== 'lobby' && state.view !== 'leagues');
     bindMainScreen();
   }
 
@@ -1285,20 +1286,25 @@
       + '</div>'
       + '<button class="btn btn-outline" id="settingsBtn"' + (isQuizLocked() ? ' disabled' : '') + ' style="width:auto;display:inline-block;padding:8px 12px;flex-shrink:0;' + (isQuizLocked() ? 'opacity:0.35;cursor:not-allowed;' : '') + '" aria-label="Ajustes">⚙️</button>'
       + '</div>';
-    var leagueLabel = state.leagueName
-      ? esc(state.leagueName) + ' (' + esc(state.groupId) + ')'
-      : 'Liga ' + esc(state.groupId);
-    html += '<div class="faint" id="whoami" style="margin-top:6px;overflow-wrap:break-word;">'
-      + '<a href="#" id="switchLeagueLink">' + leagueLabel + ' ▾</a>'
-      + ' · ' + esc(state.playerName) + ' · <a href="#" id="changeName">cambiar</a>'
-      + '</div>';
-    html += '<div class="navtabs' + (isQuizLocked()?' locked':'') + '">'
-      + '<div class="navtab' + (state.view==='home'?' active':'') + '" id="tabHome" role="button" aria-label="Inicio" title="Inicio">' + NAV_ICON.home + '</div>'
-      + '<div class="navtab' + (state.view==='quiz'?' active':'') + '" id="tabQuiz" role="button" aria-label="Hoy" title="Hoy">' + NAV_ICON.play + '</div>'
-      + '<div class="navtab' + (state.view==='ranking'?' active':'') + '" id="tabRanking" role="button" aria-label="Ranking" title="Ranking">' + NAV_ICON.trophy + '</div>'
-      + '<div class="navtab' + (state.view==='chapas'?' active':'') + '" id="tabChapas" role="button" aria-label="Chapas" title="Chapas">' + NAV_ICON.badge + '</div>'
-      + '<div class="navtab' + (state.view==='chat'?' active':'') + '" id="tabChat" role="button" aria-label="Chat" title="Chat">' + NAV_ICON.chat + '</div>'
-      + '</div>';
+    // "Tus ligas" isn't inside any particular league, so it gets none of the
+    // per-league chrome — no "Liga X ▾" line and no bottom nav tabs. Those
+    // only make sense once you've actually stepped into one.
+    if (state.view !== 'leagues'){
+      var leagueLabel = state.leagueName
+        ? esc(state.leagueName) + ' (' + esc(state.groupId) + ')'
+        : 'Liga ' + esc(state.groupId);
+      html += '<div class="faint" id="whoami" style="margin-top:6px;overflow-wrap:break-word;">'
+        + '<a href="#" id="switchLeagueLink">' + leagueLabel + ' ▾</a>'
+        + ' · ' + esc(state.playerName) + ' · <a href="#" id="changeName">cambiar</a>'
+        + '</div>';
+      html += '<div class="navtabs' + (isQuizLocked()?' locked':'') + '">'
+        + '<div class="navtab' + (state.view==='home'?' active':'') + '" id="tabHome" role="button" aria-label="Inicio" title="Inicio">' + NAV_ICON.home + '</div>'
+        + '<div class="navtab' + (state.view==='quiz'?' active':'') + '" id="tabQuiz" role="button" aria-label="Hoy" title="Hoy">' + NAV_ICON.play + '</div>'
+        + '<div class="navtab' + (state.view==='ranking'?' active':'') + '" id="tabRanking" role="button" aria-label="Ranking" title="Ranking">' + NAV_ICON.trophy + '</div>'
+        + '<div class="navtab' + (state.view==='chapas'?' active':'') + '" id="tabChapas" role="button" aria-label="Chapas" title="Chapas">' + NAV_ICON.badge + '</div>'
+        + '<div class="navtab' + (state.view==='chat'?' active':'') + '" id="tabChat" role="button" aria-label="Chat" title="Chat">' + NAV_ICON.chat + '</div>'
+        + '</div>';
+    }
 
     if (state.view === 'home') {
       html += homeScreen();
@@ -2406,7 +2412,6 @@
       + '<button class="btn btn-brand" id="createAnotherLeagueBtn">+ Crear otra liga</button>'
       + '<button class="btn btn-outline" id="joinAnotherLeagueBtn">Unirme con un código</button>'
       + '</div>';
-    html += '<div class="center mt16"><a href="#" id="backFromLeagues" class="faint">← Volver</a></div>';
     return html;
   }
 
@@ -2474,15 +2479,17 @@
     rows.forEach(function(r){
       r.addEventListener('click', function(){
         var id = r.getAttribute('data-league');
-        if (id !== state.groupId) activateLeague(id);
+        if (id !== state.groupId) { activateLeague(id); return; }
+        // Already the active league — just step back into it instead of
+        // silently doing nothing (its data/listeners are already loaded).
+        state.view = state.seasonStarted ? 'home' : 'lobby';
+        render();
       });
     });
     var createBtn = document.getElementById('createAnotherLeagueBtn');
     if (createBtn) createBtn.addEventListener('click', function(){ state.leaguesStep = 'create'; state.pendingCode = null; render(); });
     var joinBtn = document.getElementById('joinAnotherLeagueBtn');
     if (joinBtn) joinBtn.addEventListener('click', function(){ state.leaguesStep = 'join'; render(); });
-    var back = document.getElementById('backFromLeagues');
-    if (back) back.addEventListener('click', function(e){ e.preventDefault(); state.view = 'home'; render(); });
   }
 
   function bindLeaguesCreate(){
