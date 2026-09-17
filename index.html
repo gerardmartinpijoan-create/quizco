@@ -111,7 +111,8 @@
   .dot.active { background: var(--brand); width: 14px; height: 14px; }
   .row { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 2px solid var(--line); border-radius: 10px; padding: 11px 13px; margin-bottom: 8px; }
   .row.me { border-color: var(--ink); background: var(--brand-tint); }
-  .avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--brand); color: var(--ink); border: 2px solid var(--ink); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; flex-shrink: 0; }
+  .avatar { width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .avatar svg { width: 100%; height: 100%; display: block; }
   .statrow { display: flex; gap: 8px; margin-top: 12px; }
   .stattile { flex: 1; min-width: 0; background: var(--bg); border: 2px solid var(--line); border-radius: 12px; padding: 12px 6px; text-align: center; }
   .statvalue { font-family: 'Bungee', 'Work Sans', sans-serif; font-weight: 400; font-size: 21px; color: var(--brand); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -147,6 +148,10 @@
   .shopicon { width: 40px; height: 40px; border-radius: 12px; border: 2px solid; display: flex; align-items: center; justify-content: center; font-size: 19px; }
   .shopname { font-weight: 800; font-size: 13px; }
   .shopdesc { font-weight: 600; font-size: 11.5px; color: var(--ink-soft); line-height: 1.3; }
+  .shopprice { font-weight: 800; font-size: 12px; color: var(--brand); margin-top: 2px; }
+  .adslot { margin-top: 12px; border: 2px dashed var(--line); border-radius: 12px; padding: 14px; text-align: center; background: var(--surface); }
+  .adslot.video { padding: 24px 14px; }
+  .adlabel { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-faint); margin-bottom: 4px; }
   .shoptag { margin-top: 4px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; color: var(--ink-faint); background: var(--bg); border: 1.5px dashed var(--line); padding: 4px 8px; border-radius: 999px; }
   .answerrow { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
   .answerrow:last-child { border-bottom: none; }
@@ -629,6 +634,25 @@
   }
   function esc(s){ return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
   function initials(name){ return (name||'?').trim().slice(0,1).toUpperCase(); }
+  // The "quesito" avatar: a Trivial-Pursuit-style pie wedge in one of the six
+  // category colors, chosen deterministically per player (like a mini game
+  // piece), with the player's initial in the middle so people stay easy to
+  // tell apart at a glance.
+  function avatarCatFor(seed){
+    var s = String(seed || '?');
+    var h = 0;
+    for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+    return CATS[h % CATS.length];
+  }
+  function avatarHTML(name, seed){
+    var cat = avatarCatFor(seed || name);
+    var letter = esc(initials(name));
+    return '<svg viewBox="0 0 40 40" style="display:block;width:100%;height:100%;">'
+      + '<circle cx="20" cy="20" r="18" style="fill:var(--surface);stroke:var(--ink);stroke-width:2;"></circle>'
+      + '<path d="M20 20 L20 3 A17 17 0 0 1 34.72 11.5 Z" style="fill:var(' + cat.c + ');"></path>'
+      + '<text x="20" y="25.5" text-anchor="middle" font-family="Work Sans, sans-serif" font-weight="800" font-size="15" style="fill:var(--ink);">' + letter + '</text>'
+      + '</svg>';
+  }
   function fmtTime(ms){
     var s = Math.max(0, Math.floor((ms||0)/1000));
     var m = Math.floor(s/60); s = s % 60;
@@ -768,6 +792,13 @@
     leagueNameSavedTimeout: null,
     playerNameSaved: false,
     playerNameSavedTimeout: null,
+    // Whether the group has bought "premium" (removes the ad slots below).
+    // There's no real payment flow yet, so this stays false — wired up now
+    // so the ad placeholders already respect it once purchasing is real.
+    premium: false,
+    leagueUnlocks: null,
+    leagueUnlocksUnsub: null,
+    leagueUnlockWatching: false,
     leaguesStep: 'list',
     chatReactionPickerFor: null,
     chatGifPickerOpen: false,
@@ -1192,10 +1223,10 @@
     }
     html += '</div>';
 
-    if (!state.db) return html;
+    if (!state.db) return html + '<button class="btn btn-outline mt16" id="leagueShopBtn">🔑 Tienda de la liga</button>';
     if (!state.allDocs || !state.members){
       html += '<div class="muted center mt24">Cargando resumen…</div>';
-      return html;
+      return html + '<button class="btn btn-outline mt16" id="leagueShopBtn">🔑 Tienda de la liga</button>';
     }
 
     var standings = computeFullStandings(state.members, state.allDocs);
@@ -1225,7 +1256,7 @@
     standings.forEach(function(s, idx){
       html += '<div class="row' + (s.playerId===state.playerId?' me':'') + ' mt8">';
       html += '<div class="faint" style="width:16px;flex-shrink:0;font-weight:800;">' + (idx+1) + '</div>';
-      html += '<div class="avatar">' + esc(initials(s.playerName)) + '</div>';
+      html += '<div class="avatar">' + avatarHTML(s.playerName, s.playerId) + '</div>';
       html += '<div style="flex:1;min-width:0;font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(s.playerName) + (s.playerId===state.playerId?' (tú)':'') + '</div>';
       html += '<div style="font-weight:800;font-size:14px;">' + s.totalPoints + ' pts</div>';
       html += '</div>';
@@ -1242,12 +1273,16 @@
       html += '</div></div>';
     }
 
+    html += '<button class="btn btn-outline mt16" id="leagueShopBtn">🔑 Tienda de la liga</button>';
+
     return html;
   }
 
   function bindHome(){
     var chatLink = document.getElementById('goToChatLink');
     if (chatLink) chatLink.addEventListener('click', function(e){ e.preventDefault(); showChat(); });
+    var leagueShopBtn = document.getElementById('leagueShopBtn');
+    if (leagueShopBtn) leagueShopBtn.addEventListener('click', function(){ state.view = 'leagueshop'; render(); });
     var saveLeagueNameBtn = document.getElementById('saveLeagueNameBtn');
     var leagueNameInput = document.getElementById('leagueNameInput');
     if (saveLeagueNameBtn && leagueNameInput){
@@ -1302,7 +1337,7 @@
     if (members.length){
       members.forEach(function(m){
         html += '<div class="row" style="padding:8px 10px;margin-bottom:6px;">'
-          + '<div class="avatar">' + esc(initials(m.playerName)) + '</div>'
+          + '<div class="avatar">' + avatarHTML(m.playerName, m.playerId) + '</div>'
           + '<div style="flex:1;font-weight:700;">' + esc(m.playerName) + '</div>'
           + '</div>';
       });
@@ -1363,7 +1398,9 @@
       + '<div style="display:flex;align-items:center;gap:8px;min-width:0;">'
       + (showBack
           ? '<button class="btn btn-outline backbtn" id="backToLeaguesBtn"' + (isQuizLocked() ? ' disabled' : '') + ' style="' + (isQuizLocked() ? 'opacity:0.35;cursor:not-allowed;' : '') + '" aria-label="Volver a tus ligas" title="Tus ligas">' + NAV_ICON_BACK + '</button>'
-          : '')
+          // On "Tus ligas" there's no league to step back into, so this same
+          // top-left slot becomes the entry point into your profile instead.
+          : '<button class="btn btn-outline backbtn" id="profileBtn" style="padding:0;overflow:hidden;border-radius:999px;" aria-label="Tu perfil" title="Tu perfil">' + avatarHTML(state.playerName, state.playerId) + '</button>')
       + '<div class="word" style="flex-shrink:0;">Quiz<span class="amp">&amp;</span>Co</div>'
       + '</div>'
       + '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">'
@@ -1406,6 +1443,14 @@
     }
     if (state.view === 'shop') {
       html += shopScreen();
+      return html;
+    }
+    if (state.view === 'leagueshop') {
+      html += leagueShopScreen();
+      return html;
+    }
+    if (state.view === 'profile') {
+      html += profileScreen();
       return html;
     }
     if (state.view === 'leagues') {
@@ -1631,7 +1676,7 @@
       standings.forEach(function(s, idx){
         html += '<div class="row' + (s.playerId===state.playerId?' me':'') + ' mt8">';
         html += '<div class="faint" style="width:16px;flex-shrink:0;font-weight:800;">' + (idx+1) + '</div>';
-        html += '<div class="avatar">' + esc(initials(s.playerName)) + '</div>';
+        html += '<div class="avatar">' + avatarHTML(s.playerName, s.playerId) + '</div>';
         html += '<div style="flex:1;min-width:0;font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(s.playerName) + (s.playerId===state.playerId?' (tú)':'') + '</div>';
         html += '<div style="font-weight:800;font-size:14px;">' + s.totalPoints + ' pts</div>';
         html += '</div>';
@@ -1768,7 +1813,7 @@
         html += '</div>';
       }
       html += '<div class="chatmsg' + (isMe ? ' me' : '') + '" data-msgid="' + esc(msgId) + '">';
-      html += '<div class="avatar">' + esc(initials(m.playerName)) + '</div>';
+      html += '<div class="avatar">' + avatarHTML(m.playerName, m.playerId) + '</div>';
       html += '<div class="chatbubble">';
       if (!isMe) html += '<div class="chatname">' + esc(m.playerName) + '</div>';
       if ((m.type === 'image' && m.imageUrl) || (m.type === 'gif' && m.gifUrl)){
@@ -2246,6 +2291,11 @@
       html += '<div class="' + cls + '" data-oi="' + oi + '">' + esc(opt) + '</div>';
     });
     html += '</div>';
+    // A banner ad slot under every question — placeholder for now (no ad
+    // network wired up), and skipped entirely once the group is premium.
+    if (!state.premium){
+      html += '<div class="adslot"><div class="adlabel">Publicidad</div><div class="faint" style="font-size:12px;">Espacio para un banner (próximamente)</div></div>';
+    }
     return html;
   }
 
@@ -2253,7 +2303,13 @@
     var mine = state.submittedDoc;
     var rows = computeLeaderboard(state.leaderboard || [mine]);
     var mineRow = rows.filter(function(r){ return r.playerId===state.playerId; })[0];
-    var html = '<div class="card mt12">';
+    var html = '';
+    // A video ad always plays right after finishing the day's questions —
+    // placeholder for now, skipped once the group is premium.
+    if (!state.premium){
+      html += '<div class="adslot video mb16"><div class="adlabel">Publicidad</div><div style="font-size:26px;">📺</div><div class="faint mt8" style="font-size:12px;">Aquí se reproducirá un anuncio de vídeo (próximamente)</div></div>';
+    }
+    html += '<div class="card mt12">';
     html += '<div class="center">';
     html += '<div class="display" style="font-weight:800;font-size:38px;color:var(--brand);">' + (mineRow?mineRow.total:mine.correctCount*10) + '</div>';
     html += '<div class="faint" style="text-transform:uppercase;letter-spacing:0.04em;">puntos</div>';
@@ -2288,7 +2344,7 @@
     }
     rows.forEach(function(r){
       html += '<div class="row' + (r.isMe?' me':'') + '">';
-      html += '<div class="avatar">' + esc(initials(r.playerName)) + '</div>';
+      html += '<div class="avatar">' + avatarHTML(r.playerName, r.playerId) + '</div>';
       html += '<div style="flex:1;min-width:0;font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(r.playerName) + (r.isMe?' (tú)':'') + '</div>';
       html += '<div style="font-weight:800;font-size:14px;">' + r.total + ' pts</div>';
       html += '</div>';
@@ -2461,36 +2517,55 @@
     if (back) back.addEventListener('click', function(e){ e.preventDefault(); showHome(); });
   }
 
-  // Early, work-in-progress design for a future shop where points earned
-  // playing could be spent on cosmetics/power-ups. Nothing is purchasable
-  // yet — this is the first pass at how it should look.
-  var SHOP_ITEMS = [
-    { icon: '🃏', name: 'Comodín extra', desc: 'Un 50/50 más al día', cat: 0 },
-    { icon: '🖼️', name: 'Marcos de perfil', desc: 'Decora tu avatar', cat: 3 },
-    { icon: '🎨', name: 'Temas de color', desc: 'Nuevas paletas para la app', cat: 1 },
-    { icon: '🏅', name: 'Chapas exclusivas', desc: 'Insignias que no se ganan jugando', cat: 4 }
+  // Early, work-in-progress design for a future shop. This one is account-
+  // level cosmetics only (your quesito's look, and the app's color theme) —
+  // it applies everywhere you play, across every league. Anything that gives
+  // an actual gameplay edge (keys to unlock themed leagues, group perks)
+  // lives in the separate per-league shop instead — see leagueShopScreen().
+  // Nothing here is purchasable yet, this is the first pass at how it'll look.
+  var SHOP_FRAMES = [
+    { icon: '🥇', name: 'Marco dorado', desc: 'Un borde dorado para tu quesito', price: 150 },
+    { icon: '🔥', name: 'Marco de fuego', desc: 'Para cuando estás en racha', price: 150 },
+    { icon: '❄️', name: 'Marco de hielo', desc: 'Un estilo más frío para tu avatar', price: 150 }
   ];
+  var SHOP_THEMES = [
+    { icon: '🌙', name: 'Medianoche', desc: 'Paleta oscura y azulada para toda la app', price: 200 },
+    { icon: '🌸', name: 'Pastel', desc: 'Colores suaves en vez del naranja de siempre', price: 200 },
+    { icon: '⚡', name: 'Neón', desc: 'Colores vibrantes y muy contrastados', price: 200 }
+  ];
+
+  function shopSection(title, items, iconVar, iconTintVar){
+    var html = '<div class="muted mt24 mb8" style="font-weight:800;">' + esc(title) + '</div>';
+    html += '<div class="catgrid" style="grid-template-columns:1fr 1fr;">';
+    items.forEach(function(item){
+      html += '<div class="shopcard">'
+        + '<div class="shopicon" style="background:var(' + iconTintVar + ');color:var(' + iconVar + ');border-color:var(' + iconVar + ');">' + item.icon + '</div>'
+        + '<div class="shopname">' + esc(item.name) + '</div>'
+        + '<div class="shopdesc">' + esc(item.desc) + '</div>'
+        + '<div class="shopprice">🪙 ' + item.price + '</div>'
+        + '<div class="shoptag">Muy pronto</div>'
+        + '</div>';
+    });
+    html += '</div>';
+    return html;
+  }
 
   function shopScreen(){
     var html = '<div class="word center mt4">Tienda</div>';
-    html += '<div class="muted center mt8" style="margin-bottom:20px;">Muy pronto podrás gastar tus puntos aquí.</div>';
+    html += '<div class="muted center mt8" style="margin-bottom:20px;">Personaliza tu quesito y la app. Es tuyo en todas tus ligas.</div>';
     html += '<div class="card center" style="padding:22px;">';
     html += '<div style="font-size:32px;">🪙</div>';
     html += '<div class="faint mt8" style="text-transform:uppercase;letter-spacing:0.06em;">Tus monedas</div>';
     html += '<div style="font-family:\'Bungee\',sans-serif;font-weight:400;font-size:30px;color:var(--brand);margin-top:2px;">0</div>';
     html += '<div class="faint mt8">Ganarás monedas jugando cada día. Todavía no se pueden gastar — esto es solo un adelanto de cómo se verá.</div>';
+    html += '<div class="mt16" style="display:flex;gap:8px;width:100%;">'
+      + '<button class="btn btn-outline" id="watchAdBtn" disabled style="flex:1;opacity:0.5;cursor:not-allowed;font-size:12.5px;padding:10px 6px;">▶️ Ver un vídeo</button>'
+      + '<button class="btn btn-outline" id="buyCoinsBtn" disabled style="flex:1;opacity:0.5;cursor:not-allowed;font-size:12.5px;padding:10px 6px;">💳 Comprar monedas</button>'
+      + '</div>';
+    html += '<div class="faint mt8">Muy pronto — mirar un vídeo o comprar monedas te dará saldo para gastar aquí.</div>';
     html += '</div>';
-    html += '<div class="catgrid mt16" style="grid-template-columns:1fr 1fr;">';
-    SHOP_ITEMS.forEach(function(item){
-      var cat = CATS[item.cat];
-      html += '<div class="shopcard" style="border-color:var(--line);">'
-        + '<div class="shopicon" style="background:var(' + cat.ct + ');color:var(' + cat.c + ');border-color:var(' + cat.c + ');">' + item.icon + '</div>'
-        + '<div class="shopname">' + esc(item.name) + '</div>'
-        + '<div class="shopdesc">' + esc(item.desc) + '</div>'
-        + '<div class="shoptag">Muy pronto</div>'
-        + '</div>';
-    });
-    html += '</div>';
+    html += shopSection('Marcos y avatares', SHOP_FRAMES, '--brand', '--brand-tint');
+    html += shopSection('Temas de color', SHOP_THEMES, '--c-art', '--c-art-tint');
     html += '<div class="center mt16"><a href="#" id="backFromShop" class="faint">← Volver</a></div>';
     return html;
   }
@@ -2498,6 +2573,130 @@
   function bindShop(){
     var back = document.getElementById('backFromShop');
     if (back) back.addEventListener('click', function(e){ e.preventDefault(); showHome(); });
+  }
+
+  // The per-league shop: things tied to THIS league rather than to your
+  // account. No app currency here — the first themed league unlocks for
+  // free once the WHOLE group has watched a video (a group effort, not a
+  // purchase); every themed league after that costs a one-time 0.99€ per
+  // group. "Premium del grupo" is the alternative to paying per league —
+  // it also removes the ad slots (but not the optional reward-ad extras
+  // for a wildcard or an extra question, those stay either way).
+  var THEMED_LEAGUES = [
+    { key: 'football', icon: '⚽', name: 'Liga de fútbol', desc: 'Una temporada entera de preguntas de fútbol' },
+    { key: 'cine', icon: '🎬', name: 'Liga de cine y series', desc: 'Preguntas dedicadas a películas y series' },
+    { key: 'ciencia', icon: '🔬', name: 'Liga de ciencia extra', desc: 'Más preguntas de ciencia y naturaleza' }
+  ];
+
+  function leagueUnlockProgress(key){
+    var members = state.members || [];
+    var entry = (state.leagueUnlocks && state.leagueUnlocks[key]) || null;
+    var watchers = (entry && entry.watchers) || {};
+    var total = members.length;
+    var watched = members.filter(function(m){ return !!watchers[m.playerId]; }).length;
+    return {
+      total: total,
+      watched: watched,
+      iWatched: !!watchers[state.playerId],
+      unlocked: total > 0 && watched >= total
+    };
+  }
+
+  // Simulates watching the unlock video (no real ad SDK yet, same
+  // placeholder pattern as the existing day-catchup and wildcard ads), then
+  // records that this player watched it so the group's shared progress
+  // updates for everyone via the live meta/leagueUnlocks listener.
+  function watchLeagueUnlockAd(key){
+    if (!state.db || state.leagueUnlockWatching) return;
+    state.leagueUnlockWatching = key;
+    render();
+    setTimeout(function(){
+      state.leagueUnlockWatching = false;
+      var ref = state.db.doc(gpath('meta/leagueUnlocks'));
+      ref.get().then(function(snap){
+        var data = (snap.exists && snap.data()) || {};
+        var entry = data[key] || {};
+        entry.watchers = entry.watchers || {};
+        entry.watchers[state.playerId] = true;
+        data[key] = entry;
+        return ref.set(data);
+      }).catch(function(e){ console.error('quizco league unlock save error', e); }).then(function(){ render(); });
+    }, 1400);
+  }
+
+  function leagueShopScreen(){
+    var html = '<div class="word center mt4">Tienda de la liga</div>';
+    html += '<div class="muted center mt8" style="margin-bottom:20px;">Cosas para ' + esc(state.leagueName || 'esta liga') + ', pensadas para todo el grupo.</div>';
+
+    html += '<div class="muted mt24 mb8" style="font-weight:800;">Ligas temáticas</div>';
+    THEMED_LEAGUES.forEach(function(lg, idx){
+      var progress = leagueUnlockProgress(lg.key);
+      html += '<div class="card mt12" style="padding:16px;">'
+        + '<div style="display:flex;gap:12px;align-items:flex-start;">'
+        + '<div class="shopicon" style="background:var(--c-dep-tint);color:var(--c-dep);border-color:var(--c-dep);flex-shrink:0;">' + lg.icon + '</div>'
+        + '<div style="flex:1;min-width:0;">'
+        + '<div class="shopname">' + esc(lg.name) + '</div>'
+        + '<div class="shopdesc">' + esc(lg.desc) + '</div>';
+      if (progress.unlocked){
+        html += '<div class="leaguetag mt8" style="display:inline-block;">✅ Desbloqueada</div>'
+          + '<div class="faint mt8">El contenido llegará pronto.</div>';
+      } else if (idx === 0){
+        html += '<div class="faint mt8">🎬 Todo el grupo tiene que ver un vídeo para desbloquearla — gratis, sin monedas.</div>'
+          + '<div style="font-weight:800;font-size:12.5px;margin-top:6px;">' + progress.watched + '/' + progress.total + ' han visto el vídeo'
+          + (progress.total - progress.watched > 0 ? ' · faltan ' + (progress.total - progress.watched) : '') + '</div>';
+        if (progress.iWatched){
+          html += '<div class="shoptag mt8" style="display:inline-block;">Ya lo has visto, esperando al resto</div>';
+        } else {
+          html += '<button class="btn btn-brand mt8" data-watch="' + lg.key + '"' + (state.leagueUnlockWatching===lg.key?' disabled':'') + ' style="width:auto;display:inline-block;padding:8px 14px;font-size:12.5px;">'
+            + (state.leagueUnlockWatching===lg.key ? '▶️ Reproduciendo…' : '▶️ Ver vídeo') + '</button>';
+        }
+      } else {
+        html += '<div class="shopprice mt8">0,99 € · pago único para todo el grupo</div>'
+          + '<div class="shoptag mt4" style="display:inline-block;">Muy pronto</div>';
+      }
+      html += '</div></div></div>';
+    });
+
+    html += '<div class="card mt24" style="padding:18px;">'
+      + '<div style="font-size:28px;">⭐</div>'
+      + '<div style="font-weight:800;font-size:15px;margin-top:6px;">Premium del grupo</div>'
+      + '<div class="faint mt8">1,50 €/mes o 15 €/año. Quita los vídeos y los banners de publicidad del grupo — los vídeos opcionales para un comodín extra o una pregunta extra se mantienen.</div>'
+      + '<div class="shoptag mt8" style="display:inline-block;">Muy pronto</div>'
+      + '</div>';
+    html += '<div class="center mt16"><a href="#" id="backFromLeagueShop" class="faint">← Volver</a></div>';
+    return html;
+  }
+
+  function bindLeagueShop(){
+    var watchBtns = document.querySelectorAll('[data-watch]');
+    watchBtns.forEach(function(b){
+      b.addEventListener('click', function(){ watchLeagueUnlockAd(b.getAttribute('data-watch')); });
+    });
+    var back = document.getElementById('backFromLeagueShop');
+    if (back) back.addEventListener('click', function(e){ e.preventDefault(); showHome(); });
+  }
+
+  // Your account-wide profile: how your quesito looks, reachable from "Tus
+  // ligas" (there's no single league to show chrome for there, so the usual
+  // back-arrow slot becomes a profile button instead). Cosmetic changes are
+  // account-level, so this is where the shop link for them lives too.
+  function profileScreen(){
+    var html = '<div class="word center mt4">Tu perfil</div>';
+    html += '<div class="card center mt16" style="padding:26px 20px;">';
+    html += '<div style="width:84px;height:84px;margin:0 auto;">' + avatarHTML(state.playerName, state.playerId) + '</div>';
+    html += '<div style="font-family:\'Bungee\',sans-serif;font-weight:400;font-size:20px;margin-top:14px;color:var(--brand);">' + esc(state.playerName || '') + '</div>';
+    html += '<div class="faint mt8">Este es tu quesito — tu color sale de tu nombre, y muy pronto podrás cambiarlo con marcos de la tienda.</div>';
+    html += '<button class="btn btn-brand mt16" id="profileShopBtn">🛍️ Personalizar en la tienda</button>';
+    html += '</div>';
+    html += '<div class="center mt16"><a href="#" id="backFromProfile" class="faint">← Volver a tus ligas</a></div>';
+    return html;
+  }
+
+  function bindProfile(){
+    var shopLink = document.getElementById('profileShopBtn');
+    if (shopLink) shopLink.addEventListener('click', function(){ state.view = 'shop'; render(); });
+    var back = document.getElementById('backFromProfile');
+    if (back) back.addEventListener('click', function(e){ e.preventDefault(); state.leaguesStep = 'list'; state.view = 'leagues'; render(); });
   }
 
   function leaguesScreen(){
@@ -2661,6 +2860,8 @@
     if (shopBtn) shopBtn.addEventListener('click', function(){ if (isQuizLocked()) return; state.view = 'shop'; render(); });
     var backToLeaguesBtn = document.getElementById('backToLeaguesBtn');
     if (backToLeaguesBtn) backToLeaguesBtn.addEventListener('click', function(){ if (isQuizLocked()) return; state.leaguesStep = 'list'; state.view = 'leagues'; render(); });
+    var profileBtn = document.getElementById('profileBtn');
+    if (profileBtn) profileBtn.addEventListener('click', function(){ state.view = 'profile'; render(); });
     var tabHome = document.getElementById('tabHome');
     var tabQuiz = document.getElementById('tabQuiz');
     var tabRanking = document.getElementById('tabRanking');
@@ -2677,6 +2878,8 @@
     if (state.view === 'chat'){ bindChat(); return; }
     if (state.view === 'settings'){ bindSettings(); return; }
     if (state.view === 'shop'){ bindShop(); return; }
+    if (state.view === 'leagueshop'){ bindLeagueShop(); return; }
+    if (state.view === 'profile'){ bindProfile(); return; }
     if (state.view === 'leagues'){ bindLeagues(); return; }
     if (state.view === 'lobby'){ bindLobby(); return; }
     var pills = document.querySelectorAll('.daypill');
@@ -2875,6 +3078,15 @@
         if (err && err.code === 'permission-denied') retryDbInitOnce();
       });
     }
+    if (!state.leagueUnlocksUnsub){
+      state.leagueUnlocksUnsub = state.db.doc(gpath('meta/leagueUnlocks')).onSnapshot(function(snap){
+        state.leagueUnlocks = snap.exists ? snap.data() : {};
+        render();
+      }, function(err){
+        console.error('quizco league unlocks error', err);
+        if (err && err.code === 'permission-denied') retryDbInitOnce();
+      });
+    }
     if (!state.chatUnsub){
       state.chatUnsub = state.db.collection(gpath('chat')).onSnapshot(function(snap){
         state.chatMessages = snap.docs.map(function(d){ var data = d.data() || {}; data.id = d.id; return data; });
@@ -2896,6 +3108,7 @@
     if (state.desempateUnsub) { state.desempateUnsub(); state.desempateUnsub = null; }
     if (state.desempateAnswersUnsub) { state.desempateAnswersUnsub(); state.desempateAnswersUnsub = null; }
     if (state.chatUnsub) { state.chatUnsub(); state.chatUnsub = null; }
+    if (state.leagueUnlocksUnsub) { state.leagueUnlocksUnsub(); state.leagueUnlocksUnsub = null; }
   }
 
   // Shared cleanup for "change name" and "sign out": tears down every live
