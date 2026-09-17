@@ -207,6 +207,12 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<!-- Google Identity Services: usado solo para el botón "Continuar con Google"
+     (ver GOOGLE_WEB_CLIENT_ID más abajo). Es la librería oficial de Google
+     para iniciar sesión, y evita el fallo silencioso que daba el flujo de
+     popup/redirect de Firebase Auth cuando la app vive en un dominio
+     distinto al de Firebase (github.io vs. firebaseapp.com). -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
@@ -258,6 +264,13 @@
   // Mientras esté en "TU_GIPHY_KEY" el buscador de GIFs mostrará un aviso en vez de resultados.
   var GIPHY_API_KEY = '3DGSr6lmbmM47SE2szeR1lFJLJLEGcmQ';
   // ====== FIN CLAVE DE GIPHY ======
+
+  // ====== ID DE CLIENTE WEB DE GOOGLE (para el botón "Continuar con Google") ======
+  // Firebase console → Authentication → Sign-in method → Google → despliega
+  // "Configuración del SDK web" → copia el "ID de cliente web" (termina en
+  // .apps.googleusercontent.com).
+  var GOOGLE_WEB_CLIENT_ID = '459232354822-sl11dcar72jlankp6ghf2lv5duqkgtur.apps.googleusercontent.com';
+  // ====== FIN ID DE CLIENTE WEB DE GOOGLE ======
 
   var REACTION_EMOJIS = ['❤️', '😂', '👍', '😢', '😡'];
 
@@ -823,66 +836,76 @@
     });
   }
 
-  function signInWithGoogle(){
-    if (!firebaseAuth || state.authLoading) return;
-    state.authLoading = true;
-    state.authError = null;
-    render();
-    var provider;
-    try {
-      provider = new firebase.auth.GoogleAuthProvider();
-    } catch (e){
-      console.error('quizco google sign-in error', e);
+  // Google Identity Services (the accounts.google.com/gsi/client script) is
+  // Google's own current library for "Sign in with Google". We use it —
+  // instead of Firebase Auth's own signInWithPopup/signInWithRedirect — for
+  // one specific reason: Firebase's popup/redirect flow relies on a bit of
+  // storage being shared between this app's domain (github.io) and
+  // Firebase's own auth domain (firebaseapp.com), and browsers with strict
+  // tracking protection (Safari's ITP, and increasingly Chrome) silently
+  // block that. That's exactly what was happening: the redirect completed
+  // on Google's side, came back to the app, and quietly never finished
+  // signing in. Google Identity Services gets us an access token directly
+  // (no cross-domain storage involved), which we then hand to Firebase.
+  var googleTokenClient = null;
+
+  function ensureGoogleTokenClient(){
+    if (googleTokenClient) return googleTokenClient;
+    if (!window.google || !window.google.accounts || !window.google.accounts.oauth2) return null;
+    googleTokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_WEB_CLIENT_ID,
+      scope: 'openid email profile',
+      callback: function(resp){
+        if (resp && resp.access_token){
+          finishGoogleSignIn(resp.access_token);
+        } else {
+          state.authLoading = false;
+          state.authError = 'No se ha podido completar el inicio de sesión con Google.';
+          render();
+        }
+      },
+      error_callback: function(err){
+        console.error('quizco google token client error', err);
+        state.authLoading = false;
+        // 'popup_closed': the person closed the account picker themselves —
+        // not a real error, no need to alarm them with a message.
+        if (!err || err.type !== 'popup_closed'){
+          state.authError = 'No se ha podido completar el inicio de sesión con Google. Comprueba tu conexión e inténtalo de nuevo.';
+        }
+        render();
+      }
+    });
+    return googleTokenClient;
+  }
+
+  function finishGoogleSignIn(accessToken){
+    var credential = firebase.auth.GoogleAuthProvider.credential(null, accessToken);
+    firebaseAuth.signInWithCredential(credential).catch(function(e){
+      console.error('quizco google credential sign-in error', e);
       state.authLoading = false;
       state.authError = authErrorMessage(e);
       render();
-      return;
-    }
-    function goRedirect(){
-      // A full-page redirect: the only thing that works inside an in-app
-      // webview (a link opened from WhatsApp/Instagram/etc., where popups
-      // don't work at all). getRedirectResult() in initAuth() picks up the
-      // outcome once the page reloads.
-      firebaseAuth.signInWithRedirect(provider).catch(function(e){
-        console.error('quizco google sign-in error (redirect)', e);
-        state.authLoading = false;
-        state.authError = authErrorMessage(e);
-        render();
-      });
-    }
-    if (isEmbeddedWebview()){
-      goRedirect();
-      return;
-    }
-    // A popup talks back to the page over postMessage the moment it closes,
-    // so — unlike a redirect — it doesn't depend on cross-site storage
-    // surviving a full page navigation away and back. That cross-site
-    // storage is exactly what browsers with strict tracking protection
-    // (Safari's ITP, and increasingly Chrome) can silently block, which is
-    // why a redirect-only flow was failing quietly: it left Google, came
-    // back, and never actually completed sign-in. Only fall back to a
-    // redirect if the popup itself can't be opened at all.
-    firebaseAuth.signInWithPopup(provider).catch(function(e){
-      var code = e && e.code;
-      if (code === 'auth/popup-blocked' || code === 'auth/operation-not-supported-in-this-environment'){
-        goRedirect();
-        return;
-      }
-      if (code === 'auth/cancelled-popup-request'){
-        return; // a previous popup attempt is still in flight
-      }
-      console.error('quizco google sign-in error (popup)', e);
-      state.authLoading = false;
-      if (code !== 'auth/popup-closed-by-user'){
-        state.authError = authErrorMessage(e);
-      }
-      render();
     });
+    // On success, onAuthStateChanged (see initAuth) picks it up and moves the app forward.
   }
 
-  function isEmbeddedWebview(){
-    var ua = (navigator.userAgent || navigator.vendor || '') + '';
-    return /FBAN|FBAV|Instagram|Line\/|MicroMessenger|; ?wv\)|GSA\//i.test(ua);
+  function signInWithGoogle(){
+    if (!firebaseAuth || state.authLoading) return;
+    if (!GOOGLE_WEB_CLIENT_ID || GOOGLE_WEB_CLIENT_ID === 'PON_AQUI_TU_ID_DE_CLIENTE_WEB'){
+      state.authError = 'Falta configurar el ID de cliente web de Google (variable GOOGLE_WEB_CLIENT_ID al principio del archivo).';
+      render();
+      return;
+    }
+    var client = ensureGoogleTokenClient();
+    if (!client){
+      state.authError = 'No se ha podido cargar el inicio de sesión de Google. Comprueba tu conexión y recarga la página.';
+      render();
+      return;
+    }
+    state.authLoading = true;
+    state.authError = null;
+    render();
+    client.requestAccessToken();
   }
 
   function signOutUser(){
