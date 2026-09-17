@@ -83,6 +83,7 @@
   .btn-brand { background: var(--brand); color: var(--ink); }
   .btn-brand:disabled { opacity: 0.4; cursor: not-allowed; }
   .btn-outline { background: var(--surface); color: var(--ink); }
+  .backbtn { width: 38px !important; height: 38px; padding: 0 !important; display: flex; align-items: center; justify-content: center; border-radius: 999px; flex-shrink: 0; }
   input[type=text], input[type=email], input[type=password], input[type=date], select.selinput { width: 100%; border: 2.5px solid var(--ink); background: var(--surface); color: var(--ink); border-radius: 10px; padding: 14px 16px; font-size: 15px; font-family: 'Work Sans', sans-serif; font-weight: 600; -webkit-appearance: none; appearance: none; }
   select.selinput { background-image: linear-gradient(45deg, transparent 50%, var(--ink) 50%), linear-gradient(135deg, var(--ink) 50%, transparent 50%); background-position: calc(100% - 20px) calc(50% - 3px), calc(100% - 14px) calc(50% - 3px); background-size: 6px 6px, 6px 6px; background-repeat: no-repeat; }
   input[type=date] { color-scheme: light; }
@@ -93,6 +94,7 @@
   .daypill { flex-shrink: 0; border-radius: 999px; padding: 8px 14px; font-weight: 700; font-size: 13px; border: 2px solid var(--line); background: var(--surface); color: var(--ink-soft); cursor: pointer; }
   .daypill.active { background: var(--brand); color: var(--ink); border-color: var(--ink); }
   .daypill.locked { opacity: 0.55; }
+  .daypicker.locked .daypill:not(.active) { opacity: 0.35; pointer-events: none; }
   .qcard { background: var(--surface); border: 2.5px solid var(--ink); border-radius: 14px; padding: 18px; margin-bottom: 12px; box-shadow: 4px 4px 0 var(--shadow); }
   .qcat { font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 10px; display: inline-block; padding: 4px 10px; border-radius: 999px; border: 2px solid currentColor; }
   .qtext { font-family: 'Bungee', 'Work Sans', sans-serif; font-weight: 400; font-size: 16px; margin-bottom: 12px; line-height: 1.4; text-wrap: balance; }
@@ -115,6 +117,14 @@
   .statvalue { font-family: 'Bungee', 'Work Sans', sans-serif; font-weight: 400; font-size: 21px; color: var(--brand); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .statlabel { color: var(--ink-soft); font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.03em; margin-top: 3px; }
   .leadrow { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+  .leaguecard { display: flex; align-items: center; gap: 12px; padding: 13px 14px; margin-bottom: 10px; border-radius: 16px; background: var(--surface); border: 2px solid var(--line); box-shadow: 2px 2px 0 var(--shadow); cursor: pointer; transition: transform .1s ease; }
+  .leaguecard:active { transform: scale(0.98); }
+  .leaguecard.active { border: 2.5px solid var(--ink); box-shadow: 4px 4px 0 var(--shadow); }
+  .leagueicon { width: 46px; height: 46px; border-radius: 13px; border: 2px solid; display: flex; align-items: center; justify-content: center; font-size: 21px; flex-shrink: 0; }
+  .leaguename { font-weight: 800; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .leaguecode { font-weight: 700; font-size: 11px; color: var(--ink-soft); letter-spacing: 0.04em; margin-top: 2px; }
+  .leaguetag { flex-shrink: 0; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; color: var(--ok); background: var(--ok-tint); padding: 6px 9px; border-radius: 999px; text-align: center; line-height: 1.2; }
+  .leaguearrow { flex-shrink: 0; color: var(--ink-faint); font-weight: 800; font-size: 16px; }
   .chatteaser { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
   .muted { color: var(--ink-soft); font-weight: 600; font-size: 13px; }
   .faint { color: var(--ink-faint); font-weight: 600; font-size: 12px; }
@@ -129,6 +139,19 @@
   .navtab svg { width: 25px; height: 25px; display: block; flex-shrink: 0; }
   .navtab.active { background: var(--brand); color: var(--ink); border-color: var(--ink); box-shadow: 2px 2px 0 var(--shadow); transform: translateY(-3px); }
   .navtab:active { transform: scale(0.92); }
+  .catgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; text-align: left; }
+  .catchip { display: flex; align-items: center; gap: 8px; padding: 10px 11px; border-radius: 12px; border: 2px solid; font-weight: 700; font-size: 12px; line-height: 1.2; }
+  .catchip .catemoji { font-size: 17px; flex-shrink: 0; }
+  @media (max-width: 380px) { .catgrid { grid-template-columns: 1fr; } }
+  .answerrow { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .answerrow:last-child { border-bottom: none; }
+  .answermark { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; flex-shrink: 0; }
+  .answermark.ok { background: var(--ok-tint); color: var(--ok); }
+  .answermark.bad { background: var(--bad-tint); color: var(--bad); }
+  .answercat { flex: 1; min-width: 0; font-weight: 700; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .answertime { font-weight: 700; font-size: 12.5px; color: var(--ink-soft); flex-shrink: 0; }
+  .answersummary { display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 2px solid var(--line); font-size: 13px; font-weight: 700; }
+  .navtabs.locked .navtab:not(.active) { opacity: 0.35; pointer-events: none; }
   .chartwrap { position: relative; background: var(--surface); border: 2.5px solid var(--ink); border-radius: 14px; padding: 16px; margin-bottom: 16px; box-shadow: 4px 4px 0 var(--shadow); }
   .chartwrap svg { width: 100%; height: auto; display: block; overflow: visible; }
   .legend { display: flex; flex-wrap: wrap; gap: 10px 14px; margin-top: 14px; }
@@ -515,6 +538,19 @@
     for (var i=0; i<5; i++) code += chars[Math.floor(Math.random()*chars.length)];
     return code;
   }
+  function leagueColorIndex(id){
+    var s = String(id || '');
+    var h = 0;
+    for (var i=0; i<s.length; i++){ h = (h * 31 + s.charCodeAt(i)) >>> 0; }
+    return h % CATS.length;
+  }
+  var LEAGUE_ICONS = ['🏆','🎯','🚀','⭐','🔥','🎉','🦄','🎲'];
+  function leagueIconFor(id){
+    var s = String(id || '');
+    var h = 0;
+    for (var i=0; i<s.length; i++){ h = (h * 17 + s.charCodeAt(i)) >>> 0; }
+    return LEAGUE_ICONS[h % LEAGUE_ICONS.length];
+  }
   function lsGet(k, d){ try { var v = localStorage.getItem(k); return v===null ? d : v; } catch(e){ return d; } }
   function lsSet(k, v){ try { localStorage.setItem(k, v); } catch(e){} }
   // Each entry is {id, name}. Older versions stored a plain array of code
@@ -638,7 +674,10 @@
     leaderboard: null,
     unsub: null,
     checking: true,
-    view: 'home',
+    // Returning players (they already have a saved league) land on "Tus
+    // ligas" first; brand-new players go straight through onboarding, which
+    // doesn't consult this field at all until a league exists.
+    view: lsGet('qc_group', '') ? 'leagues' : 'home',
     allDocs: null,
     rankingUnsub: null,
     tooltip: null,
@@ -802,6 +841,11 @@
       + '<circle cx="15.4" cy="10.5" r="1.05" fill="currentColor" stroke="none"/>'
       + '</svg>'
   };
+
+  // Back arrow used to return to "Tus ligas" from inside an active league.
+  var NAV_ICON_BACK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;display:block;">'
+    + '<path d="M15 5.5 8 12l7 6.5"/>'
+    + '</svg>';
 
   function bindLoginScreen(){
     var tabLogin = document.getElementById('authTabLogin');
@@ -1158,7 +1202,7 @@
       var label = 'Día ' + d + (locked ? ' 🔒' : (played ? ' ✓' : ''));
       pills += '<div class="daypill' + (d===state.day?' active':'') + (locked?' locked':'') + '" data-day="' + d + '" data-locked="' + (locked?'1':'0') + '">' + label + '</div>';
     }
-    return '<div class="daypicker">' + pills + '</div>';
+    return '<div class="daypicker' + (isQuizLocked() ? ' locked' : '') + '">' + pills + '</div>';
   }
 
   function lobbyScreen(){
@@ -1222,12 +1266,24 @@
     });
   }
 
+  // True while a quiz is actively being answered (started, not yet
+  // submitted) — used to stop people bouncing to another tab mid-quiz.
+  function isQuizLocked(){
+    return state.view === 'quiz' && state.quizStarted && !state.submittedDoc;
+  }
+
   function mainScreen(){
     if (state.view === 'lobby') return lobbyScreen();
     var html = '';
+    var showBack = state.view !== 'leagues';
     html += '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">'
+      + '<div style="display:flex;align-items:center;gap:8px;min-width:0;">'
+      + (showBack
+          ? '<button class="btn btn-outline backbtn" id="backToLeaguesBtn"' + (isQuizLocked() ? ' disabled' : '') + ' style="' + (isQuizLocked() ? 'opacity:0.35;cursor:not-allowed;' : '') + '" aria-label="Volver a tus ligas" title="Tus ligas">' + NAV_ICON_BACK + '</button>'
+          : '')
       + '<div class="word" style="flex-shrink:0;">Quiz<span class="amp">&amp;</span>Co</div>'
-      + '<button class="btn btn-outline" id="settingsBtn" style="width:auto;display:inline-block;padding:8px 12px;flex-shrink:0;" aria-label="Ajustes">⚙️</button>'
+      + '</div>'
+      + '<button class="btn btn-outline" id="settingsBtn"' + (isQuizLocked() ? ' disabled' : '') + ' style="width:auto;display:inline-block;padding:8px 12px;flex-shrink:0;' + (isQuizLocked() ? 'opacity:0.35;cursor:not-allowed;' : '') + '" aria-label="Ajustes">⚙️</button>'
       + '</div>';
     var leagueLabel = state.leagueName
       ? esc(state.leagueName) + ' (' + esc(state.groupId) + ')'
@@ -1236,7 +1292,7 @@
       + '<a href="#" id="switchLeagueLink">' + leagueLabel + ' ▾</a>'
       + ' · ' + esc(state.playerName) + ' · <a href="#" id="changeName">cambiar</a>'
       + '</div>';
-    html += '<div class="navtabs">'
+    html += '<div class="navtabs' + (isQuizLocked()?' locked':'') + '">'
       + '<div class="navtab' + (state.view==='home'?' active':'') + '" id="tabHome" role="button" aria-label="Inicio" title="Inicio">' + NAV_ICON.home + '</div>'
       + '<div class="navtab' + (state.view==='quiz'?' active':'') + '" id="tabQuiz" role="button" aria-label="Hoy" title="Hoy">' + NAV_ICON.play + '</div>'
       + '<div class="navtab' + (state.view==='ranking'?' active':'') + '" id="tabRanking" role="button" aria-label="Ranking" title="Ranking">' + NAV_ICON.trophy + '</div>'
@@ -1298,12 +1354,22 @@
     return html;
   }
 
+  var CAT_EMOJI = { geo: '🌍', ent: '🎬', his: '🏛️', art: '🎨', cien: '🔬', dep: '⚽' };
+
   function startScreen(){
-    return '<div class="card center mt12">'
-      + '<div class="faint" style="text-transform:uppercase;letter-spacing:0.06em;">Hoy toca</div>'
-      + '<div style="font-family:\'Bungee\',sans-serif;font-weight:400;font-size:19px;margin-top:4px;">Día ' + state.day + ' de 6</div>'
-      + '<div class="muted mt8">6 preguntas, una por categoría. El cronómetro empieza al pulsar.</div>'
-      + '<button class="btn btn-brand mt16" id="startQuizBtn">Empezar día ' + state.day + ' →</button>'
+    var chips = CATS.map(function(cat){
+      return '<div class="catchip" style="background:var(' + cat.ct + ');border-color:var(' + cat.c + ');color:var(' + cat.c + ');">'
+        + '<span class="catemoji">' + (CAT_EMOJI[cat.key] || '❓') + '</span>'
+        + '<span>' + esc(cat.name) + '</span>'
+        + '</div>';
+    }).join('');
+    return '<div class="card center mt12" style="padding:30px 22px 26px;">'
+      + '<div class="faint" style="text-transform:uppercase;letter-spacing:0.08em;">Hoy toca</div>'
+      + '<div style="font-family:\'Bungee\',sans-serif;font-weight:400;font-size:42px;line-height:1;margin-top:10px;color:var(--brand);">Día ' + state.day + '</div>'
+      + '<div class="muted mt8">de 6 · 6 preguntas, una por categoría</div>'
+      + '<div class="catgrid mt16">' + chips + '</div>'
+      + '<div class="faint mt16">⏱️ El cronómetro empieza en cuanto pulses</div>'
+      + '<button class="btn btn-brand mt16" id="startQuizBtn" style="padding:18px;font-size:17px;">Empezar día ' + state.day + ' →</button>'
       + '</div>';
   }
 
@@ -2108,6 +2174,24 @@
       + (mineRow && mineRow.bonus ? ' · más rápido en ' + mineRow.bonus : '') + '</div>';
     html += '</div>';
 
+    var qs = questionsForDay(mine.day);
+    var totalTimeMs = 0;
+    html += '<div class="card mt16">';
+    html += '<div class="faint" style="text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Tus respuestas</div>';
+    for (var qi=0; qi<6; qi++){
+      var a = (mine.answers || [])[qi];
+      var cat = CATS[qs[qi].cat];
+      totalTimeMs += a ? (a.timeMs || 0) : 0;
+      var ok = !!(a && a.correct);
+      html += '<div class="answerrow">'
+        + '<div class="answermark ' + (ok ? 'ok' : 'bad') + '">' + (ok ? '✓' : '✗') + '</div>'
+        + '<div class="answercat" style="color:var(' + cat.c + ');">' + esc(cat.name) + '</div>'
+        + '<div class="answertime">' + (a ? fmtTime(a.timeMs) : '—') + '</div>'
+        + '</div>';
+    }
+    html += '<div class="answersummary"><div>' + mine.correctCount + '/6 bien</div><div>' + fmtTime(totalTimeMs) + ' tiempo total</div></div>';
+    html += '</div>';
+
     html += '<div class="muted mt24 mb16" style="font-weight:800;">Clasificación del día</div>';
     if (!state.db) {
       html += '<div class="faint">No se ha podido conectar el marcador compartido en esta vista. Tu resultado ya ha quedado guardado, ábrelo desde la conversación principal para ver la comparación con el grupo.</div>';
@@ -2247,7 +2331,8 @@
     if (signOutBtn) signOutBtn.addEventListener('click', function(){
       teardownSessionListeners();
       state.playerName = '';
-      state.view = 'home';
+      state.view = state.groupId ? 'leagues' : 'home';
+      state.leaguesStep = 'list';
       state.allDocs = null;
       state.members = null;
       state.desempateMeta = null;
@@ -2302,22 +2387,23 @@
     if (!leagues.some(function(l){ return l.id === state.groupId; })){
       leagues.push({ id: state.groupId, name: state.leagueName || '' });
     }
-    var html = '<div class="muted mb16" style="font-weight:800;">Tus ligas</div>';
+    var html = '<div class="word center mt4">Tus ligas</div>';
+    html += '<div class="muted center mt8" style="margin-bottom:20px;">Elige una liga para jugar, o crea/únete a otra.</div>';
     leagues.forEach(function(l){
       var active = l.id === state.groupId;
       var displayName = active ? (state.leagueName || l.name) : l.name;
-      html += '<div class="row' + (active?' me':'') + '" data-league="' + esc(l.id) + '" style="cursor:pointer;">'
-        + '<div class="avatar">🏆</div>'
-        + '<div style="flex:1;">'
-        + (displayName
-            ? '<div style="font-weight:700;">' + esc(displayName) + '</div><div class="faint" style="font-size:11px;">' + esc(l.id) + '</div>'
-            : '<div style="font-weight:700;">' + esc(l.id) + '</div>')
+      var cat = CATS[leagueColorIndex(l.id)];
+      var title = displayName || 'Liga';
+      html += '<div class="leaguecard' + (active?' active':'') + '" data-league="' + esc(l.id) + '">'
+        + '<div class="leagueicon" style="background:var(' + cat.ct + ');color:var(' + cat.c + ');border-color:var(' + cat.c + ');">' + leagueIconFor(l.id) + '</div>'
+        + '<div style="flex:1;min-width:0;">'
+        + '<div class="leaguename">' + esc(title) + '</div><div class="leaguecode">CÓDIGO ' + esc(l.id) + '</div>'
         + '</div>'
-        + (active ? '<div class="faint">actual</div>' : '')
+        + (active ? '<div class="leaguetag">Jugando ahora</div>' : '<div class="leaguearrow">→</div>')
         + '</div>';
     });
     html += '<div class="card mt16" style="display:flex;flex-direction:column;gap:10px;">'
-      + '<button class="btn btn-brand" id="createAnotherLeagueBtn">Crear otra liga</button>'
+      + '<button class="btn btn-brand" id="createAnotherLeagueBtn">+ Crear otra liga</button>'
       + '<button class="btn btn-outline" id="joinAnotherLeagueBtn">Unirme con un código</button>'
       + '</div>';
     html += '<div class="center mt16"><a href="#" id="backFromLeagues" class="faint">← Volver</a></div>';
@@ -2430,9 +2516,11 @@
 
   function bindMainScreen(){
     var settingsBtn = document.getElementById('settingsBtn');
-    if (settingsBtn) settingsBtn.addEventListener('click', function(){ state.view = 'settings'; render(); });
+    if (settingsBtn) settingsBtn.addEventListener('click', function(){ if (isQuizLocked()) return; state.view = 'settings'; render(); });
     var switchLeagueLink = document.getElementById('switchLeagueLink');
-    if (switchLeagueLink) switchLeagueLink.addEventListener('click', function(e){ e.preventDefault(); state.leaguesStep = 'list'; state.view = 'leagues'; render(); });
+    if (switchLeagueLink) switchLeagueLink.addEventListener('click', function(e){ e.preventDefault(); if (isQuizLocked()) return; state.leaguesStep = 'list'; state.view = 'leagues'; render(); });
+    var backToLeaguesBtn = document.getElementById('backToLeaguesBtn');
+    if (backToLeaguesBtn) backToLeaguesBtn.addEventListener('click', function(){ if (isQuizLocked()) return; state.leaguesStep = 'list'; state.view = 'leagues'; render(); });
     var change = document.getElementById('changeName');
     if (change) change.addEventListener('click', function(e){
       e.preventDefault();
@@ -2455,11 +2543,11 @@
     var tabRanking = document.getElementById('tabRanking');
     var tabChapas = document.getElementById('tabChapas');
     var tabChat = document.getElementById('tabChat');
-    if (tabHome) tabHome.addEventListener('click', function(){ if (state.view!=='home') showHome(); });
+    if (tabHome) tabHome.addEventListener('click', function(){ if (isQuizLocked()) return; if (state.view!=='home') showHome(); });
     if (tabQuiz) tabQuiz.addEventListener('click', function(){ if (state.view!=='quiz') showQuiz(); });
-    if (tabRanking) tabRanking.addEventListener('click', function(){ if (state.view!=='ranking') showRanking(); });
-    if (tabChapas) tabChapas.addEventListener('click', function(){ if (state.view!=='chapas') showChapas(); });
-    if (tabChat) tabChat.addEventListener('click', function(){ if (state.view!=='chat') showChat(); });
+    if (tabRanking) tabRanking.addEventListener('click', function(){ if (isQuizLocked()) return; if (state.view!=='ranking') showRanking(); });
+    if (tabChapas) tabChapas.addEventListener('click', function(){ if (isQuizLocked()) return; if (state.view!=='chapas') showChapas(); });
+    if (tabChat) tabChat.addEventListener('click', function(){ if (isQuizLocked()) return; if (state.view!=='chat') showChat(); });
     if (state.view === 'home'){ bindHome(); return; }
     if (state.view === 'ranking'){ bindRanking(); return; }
     if (state.view === 'chapas'){ bindChapas(); return; }
@@ -2470,6 +2558,7 @@
     var pills = document.querySelectorAll('.daypill');
     pills.forEach(function(p){
       p.addEventListener('click', function(){
+        if (isQuizLocked()) return;
         var d = parseInt(p.getAttribute('data-day'), 10);
         var locked = p.getAttribute('data-locked') === '1';
         if (!locked){
