@@ -159,6 +159,9 @@
   .charfig { width: 100%; height: 76px; }
   .charfig svg { width: 100%; height: 100%; display: block; }
   .charlabel { font-size: 10.5px; font-weight: 800; color: var(--ink-soft); margin-top: 3px; }
+  .pencilbtn { flex-shrink: 0; display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; padding: 0; border-radius: 999px; border: 1.5px solid var(--line); background: transparent; color: var(--ink-faint); cursor: pointer; font-family: inherit; transition: color .12s ease, border-color .12s ease; }
+  .pencilbtn:hover { color: var(--brand); border-color: var(--brand); }
+  .pencilbtn:active { transform: scale(0.92); }
   /* coin roulette */
   .roulettewrap { width: 190px; height: 190px; margin: 14px auto 12px; }
   .roulettewrap.ad { animation: qcPulse .7s ease-in-out infinite; }
@@ -1228,6 +1231,7 @@
     leagueName: '',
     pendingCreateName: null,
     leagueCreatedBy: null,
+    editingLeagueName: false,
     leagueNameSaved: false,
     leagueNameSavedTimeout: null,
     playerNameSaved: false,
@@ -1390,6 +1394,11 @@
   // Back arrow used to return to "Tus ligas" from inside an active league.
   var NAV_ICON_BACK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;display:block;">'
     + '<path d="M15 5.5 8 12l7 6.5"/>'
+    + '</svg>';
+  // Small pencil next to the league name — the rename field only shows up if
+  // you actually tap it, so it stays out of the way the rest of the time.
+  var ICON_PENCIL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;display:block;">'
+    + '<path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7.5 18.5 3 20l1.5-4.5Z"/>'
     + '</svg>';
 
   function bindLoginScreen(){
@@ -1699,18 +1708,23 @@
     var isCreator = !!state.leagueCreatedBy && state.playerId === state.leagueCreatedBy;
     var html = '<div class="card center mt12">';
     html += '<div class="faint" style="text-transform:uppercase;letter-spacing:0.06em;">Liga</div>';
-    html += '<div style="font-family:\'Bungee\',sans-serif;font-weight:400;font-size:26px;letter-spacing:0.04em;color:var(--brand);margin-top:4px;">' + esc(state.leagueName || state.groupId) + '</div>';
-    if (state.leagueName) html += '<div class="faint mt4">CÓDIGO ' + esc(state.groupId) + '</div>';
-    html += '<div class="muted mt8">¡Hola, ' + esc(state.playerName) + '!</div>';
-    if (isCreator){
-      html += '<div class="mt16" style="text-align:left;border-top:2px solid var(--line);padding-top:14px;">'
-        + '<div class="faint" style="margin-bottom:8px;">Nombre de la liga (solo tú lo puedes cambiar)</div>'
+    if (isCreator && state.editingLeagueName){
+      // only while you're actually renaming it does the field take up room
+      html += '<div class="mt8" style="text-align:left;">'
         + '<input type="text" id="leagueNameInput" placeholder="Ponle un nombre a tu liga" maxlength="30" value="' + esc(state.leagueName || '') + '">'
-        + '<div style="display:flex;align-items:center;gap:10px;margin-top:8px;">'
+        + '<div style="display:flex;align-items:center;gap:8px;margin-top:8px;">'
         + '<button class="btn btn-brand" id="saveLeagueNameBtn" style="width:auto;display:inline-block;padding:8px 14px;">Guardar</button>'
-        + (state.leagueNameSaved ? '<span class="faint">Guardado ✓</span>' : '')
+        + '<a href="#" id="cancelLeagueNameBtn" class="faint">Cancelar</a>'
         + '</div></div>';
+    } else {
+      // the pencil sits quietly next to the name; only the creator sees it
+      html += '<div style="display:flex;align-items:center;justify-content:center;gap:7px;margin-top:4px;">'
+        + '<div style="font-family:\'Bungee\',sans-serif;font-weight:400;font-size:26px;letter-spacing:0.04em;color:var(--brand);">' + esc(state.leagueName || state.groupId) + '</div>'
+        + (isCreator ? '<button class="pencilbtn" id="editLeagueNameBtn" aria-label="Cambiar el nombre de la liga" title="Cambiar el nombre de la liga">' + ICON_PENCIL + '</button>' : '')
+        + '</div>';
     }
+    if (state.leagueName) html += '<div class="faint mt4">CÓDIGO ' + esc(state.groupId) + '</div>';
+    html += '<div class="muted mt8">¡Hola, ' + esc(state.playerName) + '!' + (state.leagueNameSaved ? ' <span class="faint">Nombre guardado ✓</span>' : '') + '</div>';
     html += '</div>';
 
     if (!state.db) return html + '<button class="btn btn-outline mt16" id="leagueShopBtn">🔑 Tienda de la liga</button>';
@@ -1773,6 +1787,16 @@
     if (chatLink) chatLink.addEventListener('click', function(e){ e.preventDefault(); showChat(); });
     var leagueShopBtn = document.getElementById('leagueShopBtn');
     if (leagueShopBtn) leagueShopBtn.addEventListener('click', function(){ state.view = 'leagueshop'; render(); });
+    var editLeagueNameBtn = document.getElementById('editLeagueNameBtn');
+    if (editLeagueNameBtn) editLeagueNameBtn.addEventListener('click', function(){
+      state.editingLeagueName = true; render();
+      var i = document.getElementById('leagueNameInput');
+      if (i){ i.focus(); try { i.select(); } catch(e){} }
+    });
+    var cancelLeagueNameBtn = document.getElementById('cancelLeagueNameBtn');
+    if (cancelLeagueNameBtn) cancelLeagueNameBtn.addEventListener('click', function(e){
+      e.preventDefault(); state.editingLeagueName = false; render();
+    });
     var saveLeagueNameBtn = document.getElementById('saveLeagueNameBtn');
     var leagueNameInput = document.getElementById('leagueNameInput');
     if (saveLeagueNameBtn && leagueNameInput){
@@ -1785,6 +1809,7 @@
             console.error('quizco league name save error', e);
           });
         }
+        state.editingLeagueName = false;
         state.leagueNameSaved = true;
         if (state.leagueNameSavedTimeout) clearTimeout(state.leagueNameSavedTimeout);
         state.leagueNameSavedTimeout = setTimeout(function(){ state.leagueNameSaved = false; render(); }, 2000);
