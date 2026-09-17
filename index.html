@@ -1643,7 +1643,7 @@
       + '  <input type="text" id="nameInput" placeholder="Tu nombre" maxlength="24" value="' + esc(typed) + '">'
       + '</div>';
     html += '<div class="muted mt24 mb8" style="font-weight:800;">Elige tu personaje</div>';
-    html += '<div class="faint" style="margin-bottom:10px;">Lo puedes cambiar luego en tu perfil. La ropa y los sombreros se compran en la tienda.</div>';
+    html += '<div class="faint" style="margin-bottom:10px;">Lo puedes cambiar luego en tu perfil.</div>';
     html += '<div class="chargrid">';
     QC_CHARS.forEach(function(c){
       html += '<div class="charpick' + (c.id === chosen ? ' sel' : '') + '" data-char="' + esc(c.id) + '">'
@@ -3409,6 +3409,7 @@
         data[key] = entry;
         var totalMembers = memSnap.docs.length;
         var watchedCount = memSnap.docs.filter(function(d){ return entry.watchers[(d.data() || {}).playerId]; }).length;
+        // the last member to watch completes it, and spends the group's one free unlock
         if (totalMembers > 0 && watchedCount >= totalMembers) data.usedFreeUnlock = true;
         return ref.set(data);
       }).catch(function(e){ console.error('quizco league unlock save error', e); }).then(function(){ render(); });
