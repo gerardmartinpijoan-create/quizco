@@ -4,6 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Quiz&amp;Co</title>
+<!-- The Trivial-style 6-quesito wheel, used as the browser-tab icon and as
+     the "add to home screen" icon so it stops falling back to a generic
+     letter circle. SVG for crisp modern browsers, PNG (apple-touch-icon)
+     for iOS home-screen, which doesn't use the SVG one. -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj4KICA8Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NyIgZmlsbD0iI2ZhZjZlZSIgc3Ryb2tlPSIjMmIyMTE4IiBzdHJva2Utd2lkdGg9IjUiLz4KICA8cGF0aCBkPSJNIDUwIDUwIEwgNTAgNiBBIDQ0IDQ0IDAgMCAxIDg4LjExIDI4IFoiIGZpbGw9Im9rbGNoKDU2JSAwLjEzIDE2NSkiLz4KICA8cGF0aCBkPSJNIDUwIDUwIEwgODguMTEgMjggQSA0NCA0NCAwIDAgMSA4OC4xMSA3MiBaIiBmaWxsPSJva2xjaCg1OCUgMC4yMCAzNTApIi8+CiAgPHBhdGggZD0iTSA1MCA1MCBMIDg4LjExIDcyIEEgNDQgNDQgMCAwIDEgNTAgOTQgWiIgZmlsbD0ib2tsY2goNjMlIDAuMTUgNzUpIi8+CiAgPHBhdGggZD0iTSA1MCA1MCBMIDUwIDk0IEEgNDQgNDQgMCAwIDEgMTEuODkgNzIgWiIgZmlsbD0ib2tsY2goNTYlIDAuMTggMzA1KSIvPgogIDxwYXRoIGQ9Ik0gNTAgNTAgTCAxMS44OSA3MiBBIDQ0IDQ0IDAgMCAxIDExLjg5IDI4IFoiIGZpbGw9Im9rbGNoKDU2JSAwLjE2IDIzNSkiLz4KICA8cGF0aCBkPSJNIDUwIDUwIEwgMTEuODkgMjggQSA0NCA0NCAwIDAgMSA1MCA2IFoiIGZpbGw9Im9rbGNoKDU4JSAwLjIwIDMwKSIvPgogIDxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjQ3IiBmaWxsPSJub25lIiBzdHJva2U9IiMyYjIxMTgiIHN0cm9rZS13aWR0aD0iNSIvPgogIDxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjkiIGZpbGw9IiNmYWY2ZWUiIHN0cm9rZT0iIzJiMjExOCIgc3Ryb2tlLXdpZHRoPSI0Ii8+Cjwvc3ZnPgo=">
+<link rel="apple-touch-icon" href="data:image/png;base64,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">
+<meta name="theme-color" content="#faf6ee">
 <style>
   :root {
     --bg: oklch(95% 0.022 85);
@@ -145,6 +152,31 @@
   .catchip .catemoji { font-size: 17px; flex-shrink: 0; }
   @media (max-width: 380px) { .catgrid { grid-template-columns: 1fr; } }
   .shopcard { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 14px; border-radius: 14px; background: var(--surface); border: 2px solid var(--line); box-shadow: 2px 2px 0 var(--shadow); opacity: 0.85; }
+  /* character picker (name screen + profile) */
+  .chargrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .charpick { background: var(--surface); border: 2px solid var(--line); border-radius: 14px; padding: 8px 4px 6px; text-align: center; cursor: pointer; transition: .12s; }
+  .charpick.sel { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-tint); }
+  .charfig { width: 100%; height: 76px; }
+  .charfig svg { width: 100%; height: 100%; display: block; }
+  .charlabel { font-size: 10.5px; font-weight: 800; color: var(--ink-soft); margin-top: 3px; }
+  /* coin roulette */
+  .roulettewrap { width: 190px; height: 190px; margin: 14px auto 12px; }
+  .roulettewrap.ad { animation: qcPulse .7s ease-in-out infinite; }
+  @keyframes qcPulse { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
+  .prizetag { display: table; margin: 2px auto 0; font-weight: 900; font-size: 15px; color: var(--ink); background: var(--brand-tint); border: 2px solid var(--brand); border-radius: 999px; padding: 6px 14px; animation: qcPop .35s cubic-bezier(.2,1.4,.4,1); }
+  @keyframes qcPop { 0% { transform: scale(.6); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+  /* daily shop items */
+  .itemgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .itemcard { border: 2px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--surface); text-align: center; box-shadow: 2px 2px 0 var(--shadow); }
+  .itemslot { font-size: 9px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); padding: 7px 0 0; }
+  .itemart { height: 88px; display: flex; align-items: center; justify-content: center; }
+  .itemart .charfig { width: 64px; height: 84px; }
+  .iteminfo { padding: 6px 8px 11px; }
+  .itemname { font-size: 12.5px; font-weight: 800; }
+  .rarepill { display: inline-block; font-size: 9px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; margin-top: 4px; color: #fff; }
+  .itembuy { margin-top: 8px; width: 100%; border-radius: 999px; padding: 7px 0; font-weight: 800; font-size: 12.5px; border: 2px solid var(--line); background: var(--bg); color: var(--ink); cursor: pointer; font-family: inherit; }
+  .itembuy.can { background: var(--brand); border-color: var(--brand); color: #fff; }
+  .itembuy.owned { background: var(--bg); color: var(--ink-faint); }
   .shopicon { width: 40px; height: 40px; border-radius: 12px; border: 2px solid; display: flex; align-items: center; justify-content: center; font-size: 19px; }
   .shopname { font-weight: 800; font-size: 13px; }
   .shopdesc { font-weight: 600; font-size: 11.5px; color: var(--ink-soft); line-height: 1.3; }
@@ -608,6 +640,8 @@
   }
   function lsGet(k, d){ try { var v = localStorage.getItem(k); return v===null ? d : v; } catch(e){ return d; } }
   function lsSet(k, v){ try { localStorage.setItem(k, v); } catch(e){} }
+  function readJson(k, d){ try { var v = JSON.parse(lsGet(k, '')); return (v && typeof v === 'object') ? v : d; } catch(e){ return d; } }
+  function writeJson(k, v){ lsSet(k, JSON.stringify(v || {})); }
   // Each entry is {id, name}. Older versions stored a plain array of code
   // strings — those are transparently upgraded to {id: code, name: ''}.
   function getJoinedLeagues(){
@@ -634,24 +668,430 @@
   }
   function esc(s){ return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
   function initials(name){ return (name||'?').trim().slice(0,1).toUpperCase(); }
-  // The "quesito" avatar: a Trivial-Pursuit-style pie wedge in one of the six
-  // category colors, chosen deterministically per player (like a mini game
-  // piece), with the player's initial in the middle so people stay easy to
-  // tell apart at a glance.
-  function avatarCatFor(seed){
-    var s = String(seed || '?');
-    var h = 0;
-    for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
-    return CATS[h % CATS.length];
+  // ---------------------------------------------------------------
+  // Characters & equipment. You pick a base character when you first
+  // type your name; everything else (hat, shirt, trousers, trainers,
+  // hand item) is bought in the shop. Every character is drawn in the
+  // same 120x180 space with its head at (60,42) r=23, so any hat lands
+  // correctly on any of them.
+  // ---------------------------------------------------------------
+  /* Quiz&Co — character + equipment system.
+     Everything is drawn in a 120x180 space. The head is always a circle centred
+     at (60,42) r=23, so a hat (drawn in its own 100x80 space) lands correctly on
+     every character. Five equipment slots: sombrero, camiseta, pantalon, bambas,
+     mano — each with the same five rarities and prices. */
+
+  var QC_INK = '#2b2118';
+
+  var QC_RARITIES = [
+    { key:'normal',     name:'Normal',     price:50,  color:'#9aa3ad', tint:'#9aa3ad1f' },
+    { key:'raro',       name:'Raro',       price:100, color:'#2f9e7a', tint:'#2f9e7a1f' },
+    { key:'muyraro',    name:'Muy raro',   price:150, color:'#3b7fc4', tint:'#3b7fc41f' },
+    { key:'epico',      name:'Épico',      price:200, color:'#8a56c2', tint:'#8a56c21f' },
+    { key:'legendario', name:'Legendario', price:500, color:'#e0a01c', tint:'#e0a01c26' }
+  ];
+
+  var QC_CHARS = [
+    { id:'h1', name:'Alex',      kind:'human', skin:'#f2c9a0', hair:'#2f2418', tint:'#2f9e7a', style:'short' },
+    { id:'h2', name:'Nora',      kind:'human', skin:'#e0a976', hair:'#5b3a21', tint:'#d1467e', style:'long'  },
+    { id:'h3', name:'Bruno',     kind:'human', skin:'#c78c58', hair:'#8c5a2b', tint:'#e2952b', style:'short' },
+    { id:'h4', name:'Ada',       kind:'human', skin:'#9c6640', hair:'#3a3a3a', tint:'#8a56c2', style:'bun'   },
+    { id:'h5', name:'Lena',      kind:'human', skin:'#f7d9bd', hair:'#c8963e', tint:'#3b7fc4', style:'long'  },
+    { id:'h6', name:'Omar',      kind:'human', skin:'#7d4e2d', hair:'#4a2c18', tint:'#e2603a', style:'short' },
+    { id:'alien', name:'Marciano', kind:'alien', skin:'#7fc94a', tint:'#4a9bd4' },
+    { id:'robot', name:'Robotín',  kind:'robot', skin:'#b9c3cc', tint:'#5a6672' },
+    { id:'ghost', name:'Fantasma', kind:'ghost', skin:'#e8ecf5', tint:'#cdd6e6' },
+    { id:'cat',   name:'Gatuno',   kind:'cat',   skin:'#f0a94b', tint:'#6b4bb5' },
+    { id:'dino',  name:'Dino',     kind:'dino',  skin:'#57bf7a', tint:'#e0574a' },
+    { id:'blob',  name:'Pelusa',   kind:'blob',  skin:'#b154c9', tint:'#b154c9' }
+  ];
+
+  /* ---------------- equipment catalogues ---------------- */
+  /* Every slot has exactly one item per rarity, same price ladder. */
+  var QC_ITEMS = {
+    sombrero: [
+      { id:'gorro',     name:'Gorro',      rarity:'normal'     },
+      { id:'gorra',     name:'Gorra',      rarity:'raro'       },
+      { id:'pompon',    name:'Pompón',     rarity:'muyraro'    },
+      { id:'tricornio', name:'Tricornio',  rarity:'epico'      },
+      { id:'corona',    name:'Corona',     rarity:'legendario' }
+    ],
+    camiseta: [
+      { id:'lisa',    name:'Camiseta lisa', rarity:'normal',     c:'#9aa3ad' },
+      { id:'rayas',   name:'A rayas',       rarity:'raro',       c:'#2f9e7a' },
+      { id:'sudadera',name:'Sudadera',      rarity:'muyraro',    c:'#3b7fc4' },
+      { id:'chaqueta',name:'Chaqueta',      rarity:'epico',      c:'#8a56c2' },
+      { id:'tunica',  name:'Túnica dorada', rarity:'legendario', c:'#f0b93d' }
+    ],
+    pantalon: [
+      { id:'vaqueros',name:'Vaqueros',      rarity:'normal',     c:'#6b7787' },
+      { id:'chandal', name:'Chándal',       rarity:'raro',       c:'#2f9e7a' },
+      { id:'cargo',   name:'Cargo',         rarity:'muyraro',    c:'#3b7fc4' },
+      { id:'epicos',  name:'Pantalón épico',rarity:'epico',      c:'#8a56c2' },
+      { id:'dorados', name:'Dorados',       rarity:'legendario', c:'#f0b93d' }
+    ],
+    bambas: [
+      { id:'blancas', name:'Bambas blancas',rarity:'normal',     c:'#e4e7ea' },
+      { id:'verdes',  name:'Bambas verdes', rarity:'raro',       c:'#2f9e7a' },
+      { id:'azules',  name:'Deportivas',    rarity:'muyraro',    c:'#3b7fc4' },
+      { id:'botas',   name:'Botas',         rarity:'epico',      c:'#8a56c2' },
+      { id:'aladas',  name:'Bambas aladas', rarity:'legendario', c:'#f0b93d' }
+    ],
+    mano: [
+      { id:'lapiz',   name:'Lápiz',         rarity:'normal'     },
+      { id:'libro',   name:'Libro',         rarity:'raro'       },
+      { id:'varita',  name:'Varita',        rarity:'muyraro'    },
+      { id:'antorcha',name:'Antorcha',      rarity:'epico'      },
+      { id:'trofeo',  name:'Trofeo',        rarity:'legendario' }
+    ]
+  };
+  var QC_SLOTS = [
+    { key:'sombrero', name:'Sombreros' },
+    { key:'camiseta', name:'Camisetas' },
+    { key:'pantalon', name:'Pantalones' },
+    { key:'bambas',   name:'Bambas' },
+    { key:'mano',     name:'En la mano' }
+  ];
+
+  function qcRarity(key){
+    var r = QC_RARITIES[0];
+    QC_RARITIES.forEach(function(x){ if (x.key === key) r = x; });
+    return r;
   }
-  function avatarHTML(name, seed){
-    var cat = avatarCatFor(seed || name);
-    var letter = esc(initials(name));
-    return '<svg viewBox="0 0 40 40" style="display:block;width:100%;height:100%;">'
-      + '<circle cx="20" cy="20" r="18" style="fill:var(--surface);stroke:var(--ink);stroke-width:2;"></circle>'
-      + '<path d="M20 20 L20 3 A17 17 0 0 1 34.72 11.5 Z" style="fill:var(' + cat.c + ');"></path>'
-      + '<text x="20" y="25.5" text-anchor="middle" font-family="Work Sans, sans-serif" font-weight="800" font-size="15" style="fill:var(--ink);">' + letter + '</text>'
-      + '</svg>';
+  function qcItem(slot, id){
+    var found = null;
+    (QC_ITEMS[slot] || []).forEach(function(x){ if (x.id === id) found = x; });
+    return found;
+  }
+
+  /* ---------------- drawing helpers ---------------- */
+  function qcShade(d){ return '<path d="'+d+'" fill="#000" opacity="0.07"/>'; }
+
+  /* legs, tinted by the equipped trousers (or the plain default) */
+  function qcLegs(item){
+    var c = item ? item.c : '#5a6672';
+    var s = '<rect x="46" y="112" width="12" height="46" rx="6" fill="'+c+'"/>'
+          + '<rect x="62" y="112" width="12" height="46" rx="6" fill="'+c+'"/>';
+    if (item && item.id === 'chandal'){
+      s += '<rect x="46" y="112" width="3" height="46" fill="#fff" opacity="0.75"/>'
+         + '<rect x="71" y="112" width="3" height="46" fill="#fff" opacity="0.75"/>';
+    } else if (item && item.id === 'cargo'){
+      s += '<rect x="47.5" y="128" width="9" height="9" rx="2" fill="#000" opacity="0.18"/>'
+         + '<rect x="63.5" y="128" width="9" height="9" rx="2" fill="#000" opacity="0.18"/>';
+    } else if (item && item.id === 'epicos'){
+      s += '<rect x="46" y="130" width="12" height="3.5" fill="#e2c15a"/>'
+         + '<rect x="62" y="130" width="12" height="3.5" fill="#e2c15a"/>';
+    } else if (item && item.id === 'dorados'){
+      s += '<rect x="46" y="112" width="12" height="46" rx="6" fill="#fff" opacity="0.18"/>'
+         + '<rect x="62" y="112" width="12" height="46" rx="6" fill="#fff" opacity="0.18"/>'
+         + '<path d="M50 120 L52 125 L57 127 L52 129 L50 134 L48 129 L43 127 L48 125 Z" fill="#fff" opacity="0.65"/>';
+    }
+    return s;
+  }
+
+  /* shoes */
+  function qcShoes(item){
+    var c = item ? item.c : '#3c454f';
+    var s = '';
+    if (item && item.id === 'botas'){
+      s += '<rect x="42" y="142" width="19" height="22" rx="7" fill="'+c+'"/>'
+         + '<rect x="59" y="142" width="19" height="22" rx="7" fill="'+c+'"/>'
+         + '<rect x="42" y="150" width="19" height="4" fill="#e2c15a"/>'
+         + '<rect x="59" y="150" width="19" height="4" fill="#e2c15a"/>';
+      return s;
+    }
+    s += '<rect x="42" y="152" width="19" height="12" rx="6" fill="'+c+'"/>'
+       + '<rect x="59" y="152" width="19" height="12" rx="6" fill="'+c+'"/>';
+    if (item && (item.id === 'blancas' || item.id === 'verdes' || item.id === 'azules')){
+      s += '<rect x="42" y="160" width="19" height="4" rx="2" fill="#fff" opacity="0.85"/>'
+         + '<rect x="59" y="160" width="19" height="4" rx="2" fill="#fff" opacity="0.85"/>';
+    }
+    if (item && item.id === 'azules'){
+      s += '<path d="M46 155 L57 158" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>'
+         + '<path d="M63 158 L74 155" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>';
+    }
+    if (item && item.id === 'aladas'){
+      s += '<path d="M40 150 C32 146 28 150 30 155 C34 156 38 154 40 152 Z" fill="#fff8e0"/>'
+         + '<path d="M80 150 C88 146 92 150 90 155 C86 156 82 154 80 152 Z" fill="#fff8e0"/>';
+    }
+    return s;
+  }
+
+  /* torso + arms + hands, tinted by the equipped shirt (or the character tint) */
+  function qcTorso(skin, item, tint){
+    var c = item ? item.c : tint;
+    var s = '';
+    s += '<path d="M44 82 C34 92 32 104 34 116" fill="none" stroke="'+c+'" stroke-width="12" stroke-linecap="round"/>';
+    s += '<path d="M76 82 C86 92 88 104 86 116" fill="none" stroke="'+c+'" stroke-width="12" stroke-linecap="round"/>';
+    s += '<circle cx="34" cy="119" r="6.5" fill="'+skin+'"/>';
+    s += '<circle cx="86" cy="119" r="6.5" fill="'+skin+'"/>';
+    s += '<rect x="53" y="62" width="14" height="14" rx="6" fill="'+skin+'"/>';
+    s += '<path d="M60 70 C72 70 80 76 81 88 L83 114 C76 119 44 119 37 114 L39 88 C40 76 48 70 60 70 Z" fill="'+c+'"/>';
+    if (item && item.id === 'rayas'){
+      s += '<g opacity="0.75">'
+        + '<rect x="37" y="82" width="46" height="5" fill="#fff"/>'
+        + '<rect x="37" y="94" width="46" height="5" fill="#fff"/>'
+        + '<rect x="37" y="106" width="46" height="5" fill="#fff"/>'
+        + '</g>';
+    } else if (item && item.id === 'sudadera'){
+      s += '<path d="M46 70 C50 80 70 80 74 70 C74 78 68 84 60 84 C52 84 46 78 46 70 Z" fill="#000" opacity="0.16"/>';
+      s += '<path d="M48 98 L72 98 L72 108 L48 108 Z" fill="#000" opacity="0.13"/>';
+      s += '<path d="M54 84 L54 92 M66 84 L66 92" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity="0.8"/>';
+    } else if (item && item.id === 'chaqueta'){
+      s += '<path d="M58.5 70 L58.5 118 L61.5 118 L61.5 70 Z" fill="#000" opacity="0.22"/>';
+      s += '<path d="M60 70 L50 78 L46 70 Z" fill="#fff" opacity="0.22"/>';
+      s += '<path d="M60 70 L70 78 L74 70 Z" fill="#fff" opacity="0.22"/>';
+      s += '<circle cx="60" cy="92" r="2" fill="#e2c15a"/><circle cx="60" cy="102" r="2" fill="#e2c15a"/>';
+    } else if (item && item.id === 'tunica'){
+      s += '<path d="M60 70 C72 70 80 76 81 88 L83 114 C79 116 73 117 68 118 L66 70 Z" fill="#fff" opacity="0.2"/>';
+      s += '<path d="M60 84 L64 93 L74 94 L66 100 L69 110 L60 104 L51 110 L54 100 L46 94 L56 93 Z" fill="#fff8e0"/>';
+    } else {
+      s += qcShade('M60 70 C72 70 80 76 81 88 L83 114 C79 116 73 117 68 118 L66 70 Z');
+    }
+    return s;
+  }
+
+  /* item held in the right hand, around (86,119) */
+  function qcHand(id){
+    if (!id) return '';
+    var g = '<g transform="translate(86,119)">';
+    if (id === 'lapiz'){
+      g += '<rect x="-2.5" y="-26" width="5" height="26" rx="1.5" fill="#f2c94c"/>'
+        + '<path d="M-2.5 -26 L0 -33 L2.5 -26 Z" fill="#f7dfa5"/>'
+        + '<path d="M-1 -31 L0 -33 L1 -31 Z" fill="'+QC_INK+'"/>'
+        + '<rect x="-2.5" y="-4" width="5" height="4" fill="#e0788f"/>';
+    } else if (id === 'libro'){
+      g += '<rect x="-12" y="-16" width="24" height="17" rx="2" fill="#2f9e7a"/>'
+        + '<rect x="-9" y="-13" width="18" height="11" rx="1" fill="#fff" opacity="0.9"/>'
+        + '<path d="M0 -13 L0 -2" stroke="#2f9e7a" stroke-width="1.6"/>'
+        + '<path d="M-6 -10 L-3 -10 M-6 -7 L-3 -7 M3 -10 L6 -10 M3 -7 L6 -7" stroke="#9aa3ad" stroke-width="1.2" stroke-linecap="round"/>';
+    } else if (id === 'varita'){
+      g += '<rect x="-1.8" y="-28" width="3.6" height="28" rx="1.8" fill="#4a3career" fill-opacity="0"/>'
+        + '<rect x="-1.8" y="-28" width="3.6" height="28" rx="1.8" fill="#5b3a21"/>'
+        + '<path d="M0 -40 L3 -32 L11 -30 L3 -28 L0 -20 L-3 -28 L-11 -30 L-3 -32 Z" fill="#6fc9f0"/>'
+        + '<circle cx="0" cy="-30" r="2.6" fill="#fff"/>';
+    } else if (id === 'antorcha'){
+      g += '<rect x="-2.6" y="-24" width="5.2" height="24" rx="2" fill="#7a5230"/>'
+        + '<rect x="-5" y="-27" width="10" height="5" rx="2" fill="#5b3a21"/>'
+        + '<path d="M0 -50 C8 -42 8 -33 0 -28 C-8 -33 -8 -42 0 -50 Z" fill="#e2603a"/>'
+        + '<path d="M0 -44 C4 -39 4 -33 0 -30 C-4 -33 -4 -39 0 -44 Z" fill="#f2c94c"/>';
+    } else if (id === 'trofeo'){
+      g += '<path d="M-10 -30 L10 -30 L8 -18 C8 -13 -8 -13 -8 -18 Z" fill="#f0b93d"/>'
+        + '<path d="M-10 -30 L0 -30 L0 -13 C-6 -14 -8 -16 -8 -18 Z" fill="#fff" opacity="0.22"/>'
+        + '<path d="M-10 -28 C-18 -28 -18 -19 -11 -19" fill="none" stroke="#f0b93d" stroke-width="2.6"/>'
+        + '<path d="M10 -28 C18 -28 18 -19 11 -19" fill="none" stroke="#f0b93d" stroke-width="2.6"/>'
+        + '<rect x="-3" y="-14" width="6" height="6" fill="#d99b1f"/>'
+        + '<rect x="-8" y="-9" width="16" height="5" rx="2" fill="#d99b1f"/>'
+        + '<path d="M14 -36 L15.5 -32 L19.5 -30.5 L15.5 -29 L14 -25 L12.5 -29 L8.5 -30.5 L12.5 -32 Z" fill="#ffd977"/>';
+    }
+    return g + '</g>';
+  }
+
+  /* hats, drawn in their own 100x80 space */
+  function qcHatInner(id){
+    if (id === 'gorro'){
+      return '<path d="M22 56 C22 34 38 22 50 22 C62 22 78 34 78 56 Z" fill="#9aa3ad"/>'
+        + '<path d="M22 56 C22 34 38 22 50 22 C58 22 66 26 71 34 C62 30 34 34 28 56 Z" fill="#fff" opacity="0.18"/>'
+        + '<rect x="17" y="54" width="66" height="11" rx="5.5" fill="#79838f"/>';
+    }
+    if (id === 'gorra'){
+      return '<path d="M24 54 C24 33 38 22 50 22 C62 22 76 33 76 54 Z" fill="#2f9e7a"/>'
+        + '<path d="M24 54 C24 33 38 22 50 22 C57 22 63 25 68 31 C58 28 32 33 29 54 Z" fill="#fff" opacity="0.2"/>'
+        + '<path d="M76 50 C90 49 96 55 93 62 C82 63 74 59 74 54 Z" fill="#26866a"/>'
+        + '<rect x="22" y="50" width="56" height="7" rx="3.5" fill="#1f6f58"/>';
+    }
+    if (id === 'pompon'){
+      return '<circle cx="50" cy="16" r="7.5" fill="#cfe2f7"/>'
+        + '<path d="M22 56 C22 32 38 22 50 22 C62 22 78 32 78 56 Z" fill="#3b7fc4"/>'
+        + '<path d="M22 56 C22 32 38 22 50 22 C57 22 64 25 69 31 C58 28 30 33 28 56 Z" fill="#fff" opacity="0.2"/>'
+        + '<rect x="17" y="52" width="66" height="13" rx="6.5" fill="#cfe2f7"/>'
+        + '<rect x="17" y="52" width="66" height="6" rx="3" fill="#e8f1fb"/>';
+    }
+    if (id === 'tricornio'){
+      return '<path d="M50 8 L74 56 L26 56 Z" fill="#8a56c2"/>'
+        + '<path d="M50 8 L62 32 L38 32 Z" fill="#fff" opacity="0.16"/>'
+        + '<rect x="16" y="52" width="68" height="12" rx="6" fill="#6f3ea8"/>'
+        + '<rect x="30" y="44" width="40" height="8" rx="4" fill="#e2c15a"/>'
+        + '<path d="M50 8 C56 0 66 0 68 6 C62 6 56 10 54 14 Z" fill="#e2c15a"/>';
+    }
+    if (id === 'corona'){
+      return '<path d="M18 56 L24 22 L37 38 L50 14 L63 38 L76 22 L82 56 Z" fill="#f0b93d"/>'
+        + '<path d="M18 56 L24 22 L37 38 L50 14 L54 22 L44 44 L31 30 L26 56 Z" fill="#fff" opacity="0.22"/>'
+        + '<rect x="15" y="54" width="70" height="13" rx="6.5" fill="#d99b1f"/>'
+        + '<circle cx="50" cy="30" r="5" fill="#e0407a"/>'
+        + '<circle cx="31" cy="44" r="3.4" fill="#4aa3e8"/>'
+        + '<circle cx="69" cy="44" r="3.4" fill="#4aa3e8"/>'
+        + '<path d="M86 14 L88 20 L94 22 L88 24 L86 30 L84 24 L78 22 L84 20 Z" fill="#ffd977"/>';
+    }
+    return '';
+  }
+
+  /* ---------------- the character itself ---------------- */
+  function qcCharInner(c, eq){
+    eq = eq || {};
+    var shirt  = qcItem('camiseta', eq.camiseta);
+    var pants  = qcItem('pantalon', eq.pantalon);
+    var shoes  = qcItem('bambas',   eq.bambas);
+    var s = '';
+
+    if (c.kind === 'ghost'){
+      s += '<ellipse cx="60" cy="168" rx="22" ry="4.5" fill="#2b2118" opacity="0.07"/>';
+      s += '<path d="M60 18 C82 18 92 36 92 58 L92 142 L82 132 L72 144 L60 132 L48 144 L38 132 L28 142 L28 58 C28 36 38 18 60 18 Z" fill="'+c.skin+'"/>';
+      s += qcShade('M60 18 C82 18 92 36 92 58 L92 142 L86 136 L86 58 C86 38 76 24 60 24 Z');
+      if (shirt){
+        s += '<path d="M60 70 C76 70 86 76 87 88 L88 120 C76 126 44 126 32 120 L33 88 C34 76 44 70 60 70 Z" fill="'+shirt.c+'" opacity="0.92"/>';
+      }
+      s += '<circle cx="51" cy="46" r="4.6" fill="'+QC_INK+'"/>';
+      s += '<circle cx="69" cy="46" r="4.6" fill="'+QC_INK+'"/>';
+      s += '<ellipse cx="60" cy="60" rx="5.5" ry="6.5" fill="'+QC_INK+'" opacity="0.8"/>';
+      s += '<ellipse cx="44" cy="56" rx="4.5" ry="2.6" fill="#8fa2c4" opacity="0.4"/>';
+      s += '<ellipse cx="76" cy="56" rx="4.5" ry="2.6" fill="#8fa2c4" opacity="0.4"/>';
+      s += '<circle cx="86" cy="112" r="6.5" fill="'+c.skin+'"/>';
+      return s;
+    }
+
+    s += '<ellipse cx="60" cy="171" rx="27" ry="5" fill="#2b2118" opacity="0.09"/>';
+
+    if (c.kind === 'blob'){
+      s += qcLegs(pants);
+      s += qcShoes(shoes);
+      s += '<path d="M40 88 C28 96 24 108 26 118" fill="none" stroke="'+(shirt?shirt.c:c.skin)+'" stroke-width="12" stroke-linecap="round"/>';
+      s += '<path d="M80 88 C92 96 96 108 94 118" fill="none" stroke="'+(shirt?shirt.c:c.skin)+'" stroke-width="12" stroke-linecap="round"/>';
+      s += '<circle cx="34" cy="119" r="6.5" fill="'+c.skin+'"/>';
+      s += '<circle cx="86" cy="119" r="6.5" fill="'+c.skin+'"/>';
+      s += '<path d="M60 20 C84 20 94 40 94 66 C94 96 82 122 60 122 C38 122 26 96 26 66 C26 40 36 20 60 20 Z" fill="'+c.skin+'"/>';
+      s += qcShade('M60 20 C84 20 94 40 94 66 C94 96 82 122 60 122 C74 112 82 92 82 66 C82 42 74 26 60 20 Z');
+      if (shirt){
+        s += '<path d="M60 74 C78 74 88 82 89 94 L90 116 C80 124 40 124 30 116 L31 94 C32 82 42 74 60 74 Z" fill="'+shirt.c+'"/>';
+      }
+      s += '<path d="M40 24 L36 8 L50 18 Z" fill="'+c.skin+'"/>';
+      s += '<path d="M80 24 L84 8 L70 18 Z" fill="'+c.skin+'"/>';
+      s += '<circle cx="60" cy="44" r="15" fill="#fff"/>';
+      s += '<circle cx="62" cy="46" r="7.5" fill="'+QC_INK+'"/>';
+      s += '<circle cx="58.5" cy="41" r="2.6" fill="#fff"/>';
+      s += '<path d="M50 68 Q60 78 70 68" fill="none" stroke="'+QC_INK+'" stroke-width="2.6" stroke-linecap="round"/>';
+      return s;
+    }
+
+    s += qcLegs(pants);
+    s += qcShoes(shoes);
+    s += qcTorso(c.skin, shirt, c.tint);
+
+    if (c.kind === 'human'){
+      s += '<circle cx="60" cy="42" r="23" fill="'+c.skin+'"/>';
+      s += '<circle cx="37.5" cy="44" r="4.5" fill="'+c.skin+'"/>';
+      s += '<circle cx="82.5" cy="44" r="4.5" fill="'+c.skin+'"/>';
+      if (c.style === 'short'){
+        s += '<path d="M37 40 C37 24 47 18 60 18 C73 18 83 24 83 40 C83 32 74 28 60 28 C46 28 37 32 37 40 Z" fill="'+c.hair+'"/>';
+      } else if (c.style === 'long'){
+        s += '<path d="M35 44 C33 24 45 16 60 16 C75 16 87 24 85 44 L85 72 C82 74 79 74 78 71 L77 44 C77 34 70 28 60 28 C50 28 43 34 43 44 L42 71 C41 74 38 74 35 72 Z" fill="'+c.hair+'"/>';
+      } else {
+        s += '<circle cx="60" cy="16" r="9" fill="'+c.hair+'"/>';
+        s += '<path d="M36 44 C34 24 46 17 60 17 C74 17 86 24 84 44 C84 33 74 27 60 27 C46 27 36 33 36 44 Z" fill="'+c.hair+'"/>';
+      }
+      s += '<circle cx="51" cy="44" r="2.6" fill="'+QC_INK+'"/>';
+      s += '<circle cx="69" cy="44" r="2.6" fill="'+QC_INK+'"/>';
+      s += '<path d="M54 52 Q60 56.5 66 52" fill="none" stroke="'+QC_INK+'" stroke-width="2.2" stroke-linecap="round" opacity="0.85"/>';
+      s += '<ellipse cx="45" cy="50" rx="4" ry="2.4" fill="#e8825f" opacity="0.28"/>';
+      s += '<ellipse cx="75" cy="50" rx="4" ry="2.4" fill="#e8825f" opacity="0.28"/>';
+    } else if (c.kind === 'alien'){
+      s += '<path d="M48 26 C44 14 40 10 36 8" fill="none" stroke="'+c.skin+'" stroke-width="4" stroke-linecap="round"/>';
+      s += '<path d="M72 26 C76 14 80 10 84 8" fill="none" stroke="'+c.skin+'" stroke-width="4" stroke-linecap="round"/>';
+      s += '<circle cx="35" cy="7" r="5" fill="#d8f56a"/>';
+      s += '<circle cx="85" cy="7" r="5" fill="#d8f56a"/>';
+      s += '<circle cx="60" cy="42" r="23" fill="'+c.skin+'"/>';
+      s += '<path d="M60 19 A23 23 0 0 1 83 42 C83 30 73 24 60 24 Z" fill="#fff" opacity="0.18"/>';
+      s += '<ellipse cx="50" cy="44" rx="6.5" ry="9" fill="'+QC_INK+'" transform="rotate(-14 50 44)"/>';
+      s += '<ellipse cx="70" cy="44" rx="6.5" ry="9" fill="'+QC_INK+'" transform="rotate(14 70 44)"/>';
+      s += '<circle cx="48" cy="40" r="2.2" fill="#fff" opacity="0.85"/>';
+      s += '<circle cx="68" cy="40" r="2.2" fill="#fff" opacity="0.85"/>';
+      s += '<path d="M54 57 Q60 61 66 57" fill="none" stroke="'+QC_INK+'" stroke-width="2.2" stroke-linecap="round" opacity="0.8"/>';
+    } else if (c.kind === 'robot'){
+      s += '<line x1="60" y1="20" x2="60" y2="10" stroke="#7d8894" stroke-width="3.4"/>';
+      s += '<circle cx="60" cy="7" r="4.6" fill="#e2603a"/>';
+      s += '<circle cx="60" cy="42" r="23" fill="'+c.skin+'"/>';
+      s += '<path d="M60 19 A23 23 0 0 1 83 42 C83 30 73 24 60 24 Z" fill="#fff" opacity="0.3"/>';
+      s += '<rect x="35" y="36" width="7" height="13" rx="3.5" fill="#8d98a3"/>';
+      s += '<rect x="78" y="36" width="7" height="13" rx="3.5" fill="#8d98a3"/>';
+      s += '<rect x="43" y="32" width="34" height="23" rx="8" fill="#2b3138"/>';
+      s += '<rect x="49" y="39" width="6" height="8" rx="2" fill="#5fe3b0"/>';
+      s += '<rect x="65" y="39" width="6" height="8" rx="2" fill="#5fe3b0"/>';
+      s += '<path d="M52 50 Q60 54 68 50" fill="none" stroke="#5fe3b0" stroke-width="2.2" stroke-linecap="round"/>';
+    } else if (c.kind === 'cat'){
+      s += '<path d="M41 28 L38 10 L55 20 Z" fill="'+c.skin+'"/>';
+      s += '<path d="M79 28 L82 10 L65 20 Z" fill="'+c.skin+'"/>';
+      s += '<path d="M43 25 L42 15 L52 21 Z" fill="#f7c9a0"/>';
+      s += '<path d="M77 25 L78 15 L68 21 Z" fill="#f7c9a0"/>';
+      s += '<circle cx="60" cy="42" r="23" fill="'+c.skin+'"/>';
+      s += '<path d="M52 21 L54 29 M60 19 L60 27 M68 21 L66 29" stroke="#c9822c" stroke-width="3" stroke-linecap="round"/>';
+      s += '<circle cx="51" cy="42" r="3.2" fill="'+QC_INK+'"/>';
+      s += '<circle cx="69" cy="42" r="3.2" fill="'+QC_INK+'"/>';
+      s += '<ellipse cx="60" cy="53" rx="11" ry="8" fill="#fbe7cf"/>';
+      s += '<path d="M56 50 L64 50 L60 54 Z" fill="#e0788f"/>';
+      s += '<path d="M60 54 Q56 58 53 55 M60 54 Q64 58 67 55" fill="none" stroke="'+QC_INK+'" stroke-width="1.8" stroke-linecap="round"/>';
+      s += '<path d="M44 50 L33 47 M44 54 L33 55 M76 50 L87 47 M76 54 L87 55" stroke="'+QC_INK+'" stroke-width="1.4" stroke-linecap="round" opacity="0.6"/>';
+    } else if (c.kind === 'dino'){
+      s += '<path d="M80 130 C98 128 104 116 100 104" fill="none" stroke="'+c.skin+'" stroke-width="13" stroke-linecap="round"/>';
+      s += '<path d="M36 26 L30 16 L42 20 Z" fill="#f2c94c"/>';
+      s += '<path d="M48 19 L46 8 L57 15 Z" fill="#f2c94c"/>';
+      s += '<path d="M72 19 L74 8 L63 15 Z" fill="#f2c94c"/>';
+      s += '<path d="M84 26 L90 16 L78 20 Z" fill="#f2c94c"/>';
+      s += '<circle cx="60" cy="42" r="23" fill="'+c.skin+'"/>';
+      s += '<path d="M60 19 A23 23 0 0 1 83 42 C83 30 73 24 60 24 Z" fill="#fff" opacity="0.14"/>';
+      s += '<ellipse cx="60" cy="54" rx="14" ry="10" fill="#7ed396"/>';
+      s += '<circle cx="55" cy="51" r="1.7" fill="'+QC_INK+'"/>';
+      s += '<circle cx="65" cy="51" r="1.7" fill="'+QC_INK+'"/>';
+      s += '<path d="M51 58 Q60 64 69 58" fill="none" stroke="'+QC_INK+'" stroke-width="2.2" stroke-linecap="round"/>';
+      s += '<circle cx="50" cy="38" r="3.4" fill="'+QC_INK+'"/>';
+      s += '<circle cx="70" cy="38" r="3.4" fill="'+QC_INK+'"/>';
+      s += '<circle cx="48.8" cy="36.6" r="1.2" fill="#fff"/>';
+      s += '<circle cx="68.8" cy="36.6" r="1.2" fill="#fff"/>';
+    }
+    return s;
+  }
+
+  function qcFindChar(charId){
+    var c = null;
+    QC_CHARS.forEach(function(x){ if (x.id === charId) c = x; });
+    return c || QC_CHARS[0];
+  }
+
+  /* full-body figure with everything equipped */
+  function qcFigure(charId, eq, viewBox){
+    eq = eq || {};
+    var c = qcFindChar(charId);
+    var s = '<svg viewBox="'+(viewBox || '0 0 120 180')+'" style="display:block;width:100%;height:100%;">';
+    s += qcCharInner(c, eq);
+    s += qcHand(eq.mano);
+    if (eq.sombrero) s += '<g transform="translate(60,42) scale(0.86) translate(-50,-72)">' + qcHatInner(eq.sombrero) + '</g>';
+    s += '</svg>';
+    return s;
+  }
+  /* head-and-shoulders crop, for the small round avatars in lists */
+  function qcAvatar(charId, eq){
+    return qcFigure(charId, eq, '26 2 68 68');
+  }
+
+  // Draws the avatar for a given player: their chosen character wearing
+  // whatever they have equipped. Falls back to the first character for
+  // players who joined before characters existed.
+  function avatarHTML(name, playerId){
+    var look = lookFor(playerId);
+    return qcAvatar(look.charId, look.eq);
+  }
+  // The look of any player: your own comes from local state (so it updates
+  // the moment you equip something), everyone else's from their member doc.
+  function lookFor(playerId){
+    if (playerId && playerId === state.playerId){
+      return { charId: state.charId, eq: state.equipped || {} };
+    }
+    var found = null;
+    (state.members || []).forEach(function(m){ if (m.playerId === playerId) found = m; });
+    if (found && found.charId) return { charId: found.charId, eq: found.equipped || {} };
+    // legacy members with no character saved: give them a stable one from their id
+    var h = 0, s = String(playerId || '');
+    for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+    return { charId: QC_CHARS[h % QC_CHARS.length].id, eq: {} };
   }
   function fmtTime(ms){
     var s = Math.max(0, Math.floor((ms||0)/1000));
@@ -799,6 +1239,27 @@
     leagueUnlocks: null,
     leagueUnlocksUnsub: null,
     leagueUnlockWatching: false,
+    // Account-level coin balance, earned via the daily video roulette in the
+    // global shop. Kept in localStorage for now (the shop itself isn't a
+    // real purchase flow yet either), not per-league Firestore data.
+    coins: parseInt(lsGet('qc_coins', '0'), 10) || 0,
+    // Coin roulette: phase is null | 'ad' (the simulated advert) | 'spin'
+    // (the wheel is turning). rouletteAngle is where the wheel is resting, so
+    // each spin carries on from there instead of snapping back.
+    roulettePhase: null,
+    rouletteAngle: 0,
+    rouletteTarget: null,
+    rouletteResult: null,
+    rouletteResultTimeout: null,
+    // Your character and wardrobe. The character is picked once, when you
+    // first type your name; owned/equipped items come from the daily shop.
+    // All account-level (the same in every league), so localStorage — and
+    // mirrored onto your member doc so the rest of the group sees your look.
+    pendingName: null,
+    charId: lsGet('qc_char', '') || '',
+    owned: readJson('qc_owned', {}),
+    equipped: readJson('qc_equipped', {}),
+    shopBuying: null,
     leaguesStep: 'list',
     chatReactionPickerFor: null,
     chatGifPickerOpen: false,
@@ -824,7 +1285,7 @@
     app.innerHTML = dbErrorBanner() + mainScreen();
     // The lobby (waiting room) and the "Tus ligas" picker have no tab bar —
     // only a league you've actually stepped into does.
-    document.body.classList.toggle('has-bottomnav', state.view !== 'lobby' && state.view !== 'leagues');
+    document.body.classList.toggle('has-bottomnav', state.view !== 'lobby' && state.view !== 'leagues' && state.view !== 'profile');
     bindMainScreen();
   }
 
@@ -1166,17 +1627,34 @@
     }
   }
 
+  // Your name and your character are chosen together, on the same screen —
+  // the character grid only appears here (and in your profile later), never
+  // as a shop thing, since the base characters are free.
   function nameScreen(){
     var suggested = (state.authUser && state.authUser.displayName) ? state.authUser.displayName.split(' ')[0] : '';
-    return ''
+    // keep whatever's already been typed if this screen re-renders
+    var typed = (state.pendingName != null) ? state.pendingName : suggested;
+    var chosen = state.charId || QC_CHARS[0].id;
+    var html = ''
       + '<div class="word mt24 center">Quiz<span class="amp">&amp;</span>Co</div>'
       + '<div class="muted center mt8">Liga <strong style="color:var(--brand);">' + esc(state.groupId) + '</strong></div>'
-      + '<div class="muted center mt8" style="margin-bottom:28px;">¿Cómo te llamamos?</div>'
+      + '<div class="muted center mt8" style="margin-bottom:20px;">¿Cómo te llamamos?</div>'
       + '<div class="card">'
-      + '  <input type="text" id="nameInput" placeholder="Tu nombre" maxlength="24" value="' + esc(suggested) + '">'
-      + '  <button class="btn btn-brand mt16" id="startBtn">Empezar a jugar</button>'
-      + '</div>'
-      + '<div class="center mt16"><a href="#" id="leaveGroupLink" class="faint">← Salir de esta liga</a></div>';
+      + '  <input type="text" id="nameInput" placeholder="Tu nombre" maxlength="24" value="' + esc(typed) + '">'
+      + '</div>';
+    html += '<div class="muted mt24 mb8" style="font-weight:800;">Elige tu personaje</div>';
+    html += '<div class="faint" style="margin-bottom:10px;">Lo puedes cambiar luego en tu perfil. La ropa y los sombreros se compran en la tienda.</div>';
+    html += '<div class="chargrid">';
+    QC_CHARS.forEach(function(c){
+      html += '<div class="charpick' + (c.id === chosen ? ' sel' : '') + '" data-char="' + esc(c.id) + '">'
+        + '<div class="charfig">' + qcFigure(c.id, {}) + '</div>'
+        + '<div class="charlabel">' + esc(c.name) + '</div>'
+        + '</div>';
+    });
+    html += '</div>';
+    html += '<button class="btn btn-brand mt16" id="startBtn">Empezar a jugar</button>';
+    html += '<div class="center mt16"><a href="#" id="leaveGroupLink" class="faint">← Salir de esta liga</a></div>';
+    return html;
   }
 
   function bindNameScreen(){
@@ -1185,11 +1663,23 @@
     var leave = document.getElementById('leaveGroupLink');
     inp.focus();
     try { inp.select(); } catch(e){}
+    inp.addEventListener('input', function(){ state.pendingName = inp.value; });
+    document.querySelectorAll('[data-char]').forEach(function(el){
+      el.addEventListener('click', function(){
+        state.charId = el.getAttribute('data-char');
+        lsSet('qc_char', state.charId);
+        // swap the highlight by hand — a full render would reset the name box
+        document.querySelectorAll('[data-char]').forEach(function(o){ o.classList.remove('sel'); });
+        el.classList.add('sel');
+      });
+    });
     function go(){
       var v = inp.value.trim();
       if (!v) return;
       state.playerName = v.slice(0,24);
       lsSet('qc_name', state.playerName);
+      state.pendingName = null;
+      if (!state.charId){ state.charId = QC_CHARS[0].id; lsSet('qc_char', state.charId); }
       render();
       initDb();
     }
@@ -1408,10 +1898,10 @@
       + '<button class="btn btn-outline" id="settingsBtn"' + (isQuizLocked() ? ' disabled' : '') + ' style="width:auto;display:inline-block;padding:8px 12px;' + (isQuizLocked() ? 'opacity:0.35;cursor:not-allowed;' : '') + '" aria-label="Ajustes">⚙️</button>'
       + '</div>'
       + '</div>';
-    // "Tus ligas" isn't inside any particular league, so it gets none of the
-    // per-league chrome — no bottom nav tabs. Those only make sense once
-    // you've actually stepped into one.
-    if (state.view !== 'leagues'){
+    // "Tus ligas" and your profile aren't inside any particular league, so they
+    // get none of the per-league chrome — no bottom nav tabs. Those only make
+    // sense once you've actually stepped into one.
+    if (state.view !== 'leagues' && state.view !== 'profile'){
       html += '<div class="navtabs' + (isQuizLocked()?' locked':'') + '">'
         + '<div class="navtab' + (state.view==='home'?' active':'') + '" id="tabHome" role="button" aria-label="Inicio" title="Inicio">' + NAV_ICON.home + '</div>'
         + '<div class="navtab' + (state.view==='quiz'?' active':'') + '" id="tabQuiz" role="button" aria-label="Hoy" title="Hoy">' + NAV_ICON.play + '</div>'
@@ -2517,71 +3007,357 @@
     if (back) back.addEventListener('click', function(e){ e.preventDefault(); showHome(); });
   }
 
-  // Early, work-in-progress design for a future shop. This one is account-
-  // level cosmetics only (your quesito's look, and the app's color theme) —
-  // it applies everywhere you play, across every league. Anything that gives
-  // an actual gameplay edge (keys to unlock themed leagues, group perks)
-  // lives in the separate per-league shop instead — see leagueShopScreen().
-  // Nothing here is purchasable yet, this is the first pass at how it'll look.
-  var SHOP_FRAMES = [
-    { icon: '🥇', name: 'Marco dorado', desc: 'Un borde dorado para tu quesito', price: 150 },
-    { icon: '🔥', name: 'Marco de fuego', desc: 'Para cuando estás en racha', price: 150 },
-    { icon: '❄️', name: 'Marco de hielo', desc: 'Un estilo más frío para tu avatar', price: 150 }
+  // The account-level shop: your character's wardrobe, the same in every
+  // league you play. Anything that gives an actual gameplay edge (keys to
+  // unlock themed leagues, group perks) lives in the separate per-league shop
+  // instead — see leagueShopScreen().
+  //
+  // The stock rotates daily: exactly one item per slot, and each one's rarity
+  // is rolled at random. The roll is seeded off the date, so the whole group
+  // sees the same shop on the same day with nothing stored anywhere, and it
+  // changes on its own at midnight. Legendary is deliberately the long shot.
+  var RARITY_ODDS = [
+    { key: 'normal', chance: 35 },
+    { key: 'raro', chance: 27 },
+    { key: 'muyraro', chance: 20 },
+    { key: 'epico', chance: 13 },
+    { key: 'legendario', chance: 5 }
   ];
-  var SHOP_THEMES = [
-    { icon: '🌙', name: 'Medianoche', desc: 'Paleta oscura y azulada para toda la app', price: 200 },
-    { icon: '🌸', name: 'Pastel', desc: 'Colores suaves en vez del naranja de siempre', price: 200 },
-    { icon: '⚡', name: 'Neón', desc: 'Colores vibrantes y muy contrastados', price: 200 }
+  function seedHash(s){
+    var h = 2166136261;
+    for (var i = 0; i < s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return (h >>> 0);
+  }
+  function dailyRarityFor(slotKey){
+    var r = seedHash(todayDateStr() + '|' + slotKey) % 100;
+    var acc = 0;
+    for (var i = 0; i < RARITY_ODDS.length; i++){
+      acc += RARITY_ODDS[i].chance;
+      if (r < acc) return RARITY_ODDS[i].key;
+    }
+    return 'normal';
+  }
+  // Today's five items, one per slot.
+  function dailyStock(){
+    return QC_SLOTS.map(function(slot){
+      var rk = dailyRarityFor(slot.key);
+      var item = null;
+      QC_ITEMS[slot.key].forEach(function(x){ if (x.rarity === rk) item = x; });
+      return { slot: slot, item: item, rarity: qcRarity(rk) };
+    });
+  }
+  function ownsItem(slotKey, itemId){
+    var list = state.owned[slotKey] || [];
+    return list.indexOf(itemId) !== -1;
+  }
+  function buyItem(slotKey, itemId, price){
+    if (ownsItem(slotKey, itemId) || (state.coins || 0) < price) return;
+    state.coins -= price;
+    lsSet('qc_coins', String(state.coins));
+    state.owned[slotKey] = (state.owned[slotKey] || []).concat([itemId]);
+    writeJson('qc_owned', state.owned);
+    // buying something puts it on straight away — that's the fun part
+    state.equipped[slotKey] = itemId;
+    writeJson('qc_equipped', state.equipped);
+    saveLookToMember();
+    render();
+  }
+  function toggleEquip(slotKey, itemId){
+    if (!ownsItem(slotKey, itemId)) return;
+    if (state.equipped[slotKey] === itemId) delete state.equipped[slotKey];
+    else state.equipped[slotKey] = itemId;
+    writeJson('qc_equipped', state.equipped);
+    saveLookToMember();
+    render();
+  }
+  // Mirrors your character + equipment onto your member doc, so everyone
+  // else's leaderboard, chat and lobby show what you're actually wearing.
+  function saveLookToMember(){
+    if (!state.db || !state.groupId || !state.playerId) return;
+    try {
+      state.db.doc(gpath('members/' + state.playerId)).get().then(function(snap){
+        var data = (snap.exists && snap.data()) || {};
+        data.playerId = state.playerId;
+        data.playerName = state.playerName;
+        data.charId = state.charId;
+        data.equipped = state.equipped || {};
+        if (!data.joinedAt) data.joinedAt = new Date().toISOString();
+        return state.db.doc(gpath('members/' + state.playerId)).set(data);
+      }).catch(function(e){ console.error('quizco look save error', e); });
+    } catch(e){ console.error('quizco look save error', e); }
+  }
+  // Watching an ad here is real (no payment involved), up to 5 times a day;
+  // it spins this weighted table for a coin reward. Chances sum to 100.
+  var COIN_ROULETTE = [
+    { coins: 1, chance: 50 },
+    { coins: 5, chance: 25 },
+    { coins: 10, chance: 15 },
+    { coins: 20, chance: 8 },
+    { coins: 50, chance: 2 }
   ];
+  var COIN_PACKS = [
+    { coins: 50, price: '0,99 €' },
+    { coins: 100, price: '1,50 €' },
+    { coins: 500, price: '5,50 €' },
+    { coins: 1000, price: '10 €' }
+  ];
+  var DAILY_ROULETTE_SPINS = 5;
 
-  function shopSection(title, items, iconVar, iconTintVar){
-    var html = '<div class="muted mt24 mb8" style="font-weight:800;">' + esc(title) + '</div>';
-    html += '<div class="catgrid" style="grid-template-columns:1fr 1fr;">';
-    items.forEach(function(item){
-      html += '<div class="shopcard">'
-        + '<div class="shopicon" style="background:var(' + iconTintVar + ');color:var(' + iconVar + ');border-color:var(' + iconVar + ');">' + item.icon + '</div>'
-        + '<div class="shopname">' + esc(item.name) + '</div>'
-        + '<div class="shopdesc">' + esc(item.desc) + '</div>'
-        + '<div class="shopprice">🪙 ' + item.price + '</div>'
-        + '<div class="shoptag">Muy pronto</div>'
-        + '</div>';
+  function todayStr(){
+    var d = new Date();
+    return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+  }
+  function getSpinsUsedToday(){
+    if (lsGet('qc_spins_date', '') !== todayStr()) return 0;
+    return parseInt(lsGet('qc_spins_used', '0'), 10) || 0;
+  }
+  function setSpinsUsedToday(n){
+    lsSet('qc_spins_date', todayStr());
+    lsSet('qc_spins_used', String(n));
+  }
+  // Picks which prize you win, using the chances in COIN_ROULETTE. This is the
+  // only thing that decides the outcome — the wheel's equal-looking slices are
+  // just the animation that shows you the result.
+  function spinRouletteIndex(){
+    var r = Math.random() * 100;
+    var acc = 0;
+    for (var i = 0; i < COIN_ROULETTE.length; i++){
+      acc += COIN_ROULETTE[i].chance;
+      if (r < acc) return i;
+    }
+    return COIN_ROULETTE.length - 1;
+  }
+  var ROULETTE_COLORS = { 1: '#9aa3ad', 5: '#2f9e7a', 10: '#3b7fc4', 20: '#8a56c2', 50: '#f0b93d' };
+  // The wheel is drawn as ten identical slices — every prize appears twice,
+  // opposite itself — so it looks like an even wheel. The odds are NOT the
+  // slice sizes: which prize you get is decided by spinRouletteIndex() using
+  // the chances in COIN_ROULETTE, and only then does the wheel turn to a slice
+  // showing that prize.
+  var WHEEL_SLICES = [1, 5, 10, 20, 50, 1, 5, 10, 20, 50];
+  function polarPt(cx, cy, r, deg){
+    var a = (deg - 90) * Math.PI / 180;
+    return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+  }
+  function rouletteWheelHTML(){
+    var cx = 50, cy = 50, r = 44;
+    var span = 360 / WHEEL_SLICES.length;
+    var svg = '<svg viewBox="0 0 100 100" style="display:block;width:100%;height:100%;overflow:visible;">';
+    svg += '<g id="rouletteWheel" style="transform-box:fill-box;transform-origin:center;transform:rotate(' + (state.rouletteAngle || 0) + 'deg);">';
+    WHEEL_SLICES.forEach(function(coins, i){
+      var a0 = i * span, a1 = a0 + span;
+      var p0 = polarPt(cx, cy, r, a0), p1 = polarPt(cx, cy, r, a1);
+      svg += '<path d="M ' + cx + ' ' + cy + ' L ' + p0[0].toFixed(2) + ' ' + p0[1].toFixed(2)
+        + ' A ' + r + ' ' + r + ' 0 0 1 ' + p1[0].toFixed(2) + ' ' + p1[1].toFixed(2) + ' Z"'
+        + ' fill="' + ROULETTE_COLORS[coins] + '" stroke="var(--ink)" stroke-width="1.4" stroke-linejoin="round"/>';
+      var mid = a0 + span / 2;
+      svg += '<g transform="rotate(' + mid.toFixed(2) + ' ' + cx + ' ' + cy + ')">'
+        + '<text x="' + cx + '" y="' + (cy - r * 0.66).toFixed(2) + '" text-anchor="middle" dominant-baseline="middle"'
+        + ' style="font-family:inherit;font-weight:900;font-size:9px;fill:#fff;">' + coins + '</text>'
+        + '</g>';
+    });
+    svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="var(--ink)" stroke-width="3"/>';
+    svg += '</g>';
+    // hub + pointer stay put while the wheel turns under them
+    svg += '<circle cx="' + cx + '" cy="' + cy + '" r="8" fill="var(--surface)" stroke="var(--ink)" stroke-width="3"/>';
+    svg += '<circle cx="' + cx + '" cy="' + cy + '" r="2.6" fill="var(--ink)"/>';
+    svg += '<path d="M50 14 L43 2 L57 2 Z" fill="var(--brand)" stroke="var(--ink)" stroke-width="2.6" stroke-linejoin="round"/>';
+    svg += '</svg>';
+    return svg;
+  }
+  // Where the wheel has to stop to show a given prize: pick one of the slices
+  // carrying it (at random, so it doesn't always stop in the same place), then
+  // spin a few full turns and finish with that slice under the pointer.
+  function rouletteTargetAngle(coins){
+    var span = 360 / WHEEL_SLICES.length;
+    var matches = [];
+    WHEEL_SLICES.forEach(function(v, i){ if (v === coins) matches.push(i); });
+    if (!matches.length) matches = [0];
+    var slice = matches[Math.floor(Math.random() * matches.length)];
+    var mid = slice * span + span / 2 + (Math.random() - 0.5) * span * 0.6;
+    var want = ((-mid) % 360 + 360) % 360;
+    var base = Math.ceil((state.rouletteAngle || 0) / 360) * 360;
+    return base + 360 * 5 + want;
+  }
+  // Watching the ad is still simulated (no ad network wired up), but the spin
+  // and the coins that follow are real.
+  function watchRouletteAd(){
+    if (state.roulettePhase) return;
+    var used = getSpinsUsedToday();
+    if (used >= DAILY_ROULETTE_SPINS) return;
+    state.roulettePhase = 'ad';
+    state.rouletteResult = null;
+    render();
+    setTimeout(function(){
+      var won = COIN_ROULETTE[spinRouletteIndex()].coins;
+      var target = rouletteTargetAngle(won);
+      state.roulettePhase = 'spin';
+      state.rouletteTarget = target;
+      // Update the button in place instead of re-rendering: a re-render would
+      // rebuild the <svg> and kill the CSS transition mid-spin.
+      var btn = document.getElementById('rouletteBtn');
+      if (btn) btn.textContent = '🎡 Girando…';
+      var el = document.getElementById('rouletteWheel');
+      if (!el){ finishRouletteSpin(won, target, used); return; }
+      requestAnimationFrame(function(){
+        el.style.transition = 'transform 4.2s cubic-bezier(0.16,0.72,0.11,1)';
+        el.style.transform = 'rotate(' + target + 'deg)';
+      });
+      setTimeout(function(){ finishRouletteSpin(won, target, used); }, 4350);
+    }, 1400);
+  }
+  function finishRouletteSpin(won, target, used){
+    state.rouletteAngle = target;
+    state.rouletteTarget = null;
+    state.coins = (state.coins || 0) + won;
+    lsSet('qc_coins', String(state.coins));
+    setSpinsUsedToday(used + 1);
+    state.roulettePhase = null;
+    state.rouletteResult = won;
+    render();
+    if (state.rouletteResultTimeout) clearTimeout(state.rouletteResultTimeout);
+    state.rouletteResultTimeout = setTimeout(function(){ state.rouletteResult = null; render(); }, 4000);
+  }
+
+  // Today's shop: five cards, one per slot. Each previews your own character
+  // wearing just that item, so you see how it'll look on you before buying.
+  function dailyShopSection(){
+    var stock = dailyStock();
+    var html = '<div class="muted mt24 mb4" style="font-weight:800;">La tienda de hoy</div>';
+    html += '<div class="faint" style="margin-bottom:10px;">Un objeto de cada tipo al día y la rareza sale al azar. Mañana hay otros cinco.</div>';
+    html += '<div class="itemgrid">';
+    stock.forEach(function(entry){
+      var slotKey = entry.slot.key, item = entry.item, r = entry.rarity;
+      var owned = ownsItem(slotKey, item.id);
+      var wearing = state.equipped[slotKey] === item.id;
+      var canAfford = (state.coins || 0) >= r.price;
+      var preview = {}; preview[slotKey] = item.id;
+      var btnClass = owned ? 'itembuy owned' : (canAfford ? 'itembuy can' : 'itembuy');
+      var btnLabel = owned
+        ? (wearing ? '✓ Puesto' : 'Ponérmelo')
+        : (canAfford ? '🪙 ' + r.price : '🪙 ' + r.price);
+      html += '<div class="itemcard" style="border-color:' + r.color + '66;">'
+        + '<div class="itemslot">' + esc(entry.slot.name) + '</div>'
+        + '<div class="itemart" style="background:' + r.tint + ';"><div class="charfig">' + qcFigure(state.charId, preview) + '</div></div>'
+        + '<div class="iteminfo">'
+        + '<div class="itemname">' + esc(item.name) + '</div>'
+        + '<div class="rarepill" style="background:' + r.color + ';">' + esc(r.name) + '</div>'
+        + '<button class="' + btnClass + '" data-buy="' + esc(slotKey) + '" data-item="' + esc(item.id) + '" data-price="' + r.price + '"'
+        + ((!owned && !canAfford) ? ' style="opacity:0.55;"' : '') + '>' + btnLabel + '</button>'
+        + '</div></div>';
     });
     html += '</div>';
     return html;
   }
 
+  // Everything you've already bought, grouped by slot, so you can change
+  // outfit any day — not just the day an item was on sale.
+  function wardrobeSection(){
+    var any = false;
+    QC_SLOTS.forEach(function(s){ if ((state.owned[s.key] || []).length) any = true; });
+    if (!any) return '';
+    var html = '<div class="muted mt24 mb8" style="font-weight:800;">Tu armario</div>';
+    QC_SLOTS.forEach(function(slot){
+      var list = state.owned[slot.key] || [];
+      if (!list.length) return;
+      html += '<div class="faint mt8" style="margin-bottom:6px;">' + esc(slot.name) + '</div>';
+      html += '<div class="chargrid">';
+      list.forEach(function(itemId){
+        var item = qcItem(slot.key, itemId);
+        if (!item) return;
+        var r = qcRarity(item.rarity);
+        var preview = {}; preview[slot.key] = itemId;
+        var on = state.equipped[slot.key] === itemId;
+        html += '<div class="charpick' + (on ? ' sel' : '') + '" data-equip="' + esc(slot.key) + '" data-item="' + esc(itemId) + '">'
+          + '<div class="charfig">' + qcFigure(state.charId, preview) + '</div>'
+          + '<div class="charlabel" style="color:' + r.color + ';">' + esc(item.name) + '</div>'
+          + '</div>';
+      });
+      html += '</div>';
+    });
+    return html;
+  }
+
   function shopScreen(){
+    var usedSpins = getSpinsUsedToday();
+    var spinsLeft = Math.max(0, DAILY_ROULETTE_SPINS - usedSpins);
+    var busy = !!state.roulettePhase;
+    var spinDisabled = spinsLeft <= 0 || busy;
     var html = '<div class="word center mt4">Tienda</div>';
-    html += '<div class="muted center mt8" style="margin-bottom:20px;">Personaliza tu quesito y la app. Es tuyo en todas tus ligas.</div>';
-    html += '<div class="card center" style="padding:22px;">';
-    html += '<div style="font-size:32px;">🪙</div>';
+    html += '<div class="muted center mt8" style="margin-bottom:20px;">Ropa para tu personaje. Es tuya en todas tus ligas.</div>';
+
+    html += '<div class="card center" style="padding:20px;">';
+    html += '<div style="width:96px;height:120px;margin:0 auto;">' + qcFigure(state.charId, state.equipped) + '</div>';
     html += '<div class="faint mt8" style="text-transform:uppercase;letter-spacing:0.06em;">Tus monedas</div>';
-    html += '<div style="font-family:\'Bungee\',sans-serif;font-weight:400;font-size:30px;color:var(--brand);margin-top:2px;">0</div>';
-    html += '<div class="faint mt8">Ganarás monedas jugando cada día. Todavía no se pueden gastar — esto es solo un adelanto de cómo se verá.</div>';
-    html += '<div class="mt16" style="display:flex;gap:8px;width:100%;">'
-      + '<button class="btn btn-outline" id="watchAdBtn" disabled style="flex:1;opacity:0.5;cursor:not-allowed;font-size:12.5px;padding:10px 6px;">▶️ Ver un vídeo</button>'
-      + '<button class="btn btn-outline" id="buyCoinsBtn" disabled style="flex:1;opacity:0.5;cursor:not-allowed;font-size:12.5px;padding:10px 6px;">💳 Comprar monedas</button>'
-      + '</div>';
-    html += '<div class="faint mt8">Muy pronto — mirar un vídeo o comprar monedas te dará saldo para gastar aquí.</div>';
+    html += '<div style="font-family:\'Bungee\',sans-serif;font-weight:400;font-size:30px;color:var(--brand);margin-top:2px;">' + (state.coins || 0) + '</div>';
     html += '</div>';
-    html += shopSection('Marcos y avatares', SHOP_FRAMES, '--brand', '--brand-tint');
-    html += shopSection('Temas de color', SHOP_THEMES, '--c-art', '--c-art-tint');
+
+    // the roulette lives in its own card, wheel and all
+    html += '<div class="card center mt16" style="padding:20px 18px 22px;">';
+    html += '<div style="font-weight:800;font-size:14px;">Ruleta de monedas</div>';
+    html += '<div class="faint mt4">Ve un vídeo, gira la ruleta y llévate las monedas que toquen.</div>';
+    html += '<div class="roulettewrap' + (state.roulettePhase === 'ad' ? ' ad' : '') + '">' + rouletteWheelHTML() + '</div>';
+    if (state.rouletteResult != null){
+      html += '<div class="prizetag">🎉 +' + state.rouletteResult + ' monedas</div>';
+    } else if (state.roulettePhase === 'ad'){
+      html += '<div class="faint" style="font-weight:800;">Reproduciendo el anuncio…</div>';
+    } else {
+      html += '<div class="mt4" style="font-weight:800;font-size:12.5px;">Te quedan ' + spinsLeft + '/' + DAILY_ROULETTE_SPINS + ' hoy</div>';
+    }
+    html += '<button class="btn btn-brand mt8" id="rouletteBtn"' + (spinDisabled ? ' disabled' : '') + ' style="width:auto;display:inline-block;padding:10px 16px;' + (spinDisabled ? 'opacity:0.5;cursor:not-allowed;' : '') + '">'
+      + (state.roulettePhase === 'ad' ? '▶️ Reproduciendo…'
+         : (state.roulettePhase === 'spin' ? '🎡 Girando…'
+         : (spinsLeft <= 0 ? '🎬 Vuelve mañana' : '🎬 Ver vídeo y girar'))) + '</button>';
+    html += '</div>';
+
+    html += dailyShopSection();
+    html += wardrobeSection();
+
+    html += '<div class="muted mt24 mb8" style="font-weight:800;">Packs de monedas</div>';
+    html += '<div class="catgrid" style="grid-template-columns:1fr 1fr;">';
+    COIN_PACKS.forEach(function(pack){
+      html += '<div class="shopcard">'
+        + '<div class="shopicon" style="background:var(--brand-tint);color:var(--brand);border-color:var(--brand);">🪙</div>'
+        + '<div class="shopname">' + pack.coins + ' monedas</div>'
+        + '<div class="shopprice mt4">' + pack.price + '</div>'
+        + '<div class="shoptag">Muy pronto</div>'
+        + '</div>';
+    });
+    html += '</div>';
+
     html += '<div class="center mt16"><a href="#" id="backFromShop" class="faint">← Volver</a></div>';
     return html;
   }
 
   function bindShop(){
+    var rouletteBtn = document.getElementById('rouletteBtn');
+    if (rouletteBtn) rouletteBtn.addEventListener('click', watchRouletteAd);
+    document.querySelectorAll('[data-buy]').forEach(function(b){
+      b.addEventListener('click', function(){
+        var slotKey = b.getAttribute('data-buy');
+        var itemId = b.getAttribute('data-item');
+        var price = parseInt(b.getAttribute('data-price'), 10) || 0;
+        if (ownsItem(slotKey, itemId)) toggleEquip(slotKey, itemId);
+        else buyItem(slotKey, itemId, price);
+      });
+    });
+    document.querySelectorAll('[data-equip]').forEach(function(el){
+      el.addEventListener('click', function(){
+        toggleEquip(el.getAttribute('data-equip'), el.getAttribute('data-item'));
+      });
+    });
     var back = document.getElementById('backFromShop');
     if (back) back.addEventListener('click', function(e){ e.preventDefault(); showHome(); });
   }
 
   // The per-league shop: things tied to THIS league rather than to your
-  // account. No app currency here — the first themed league unlocks for
-  // free once the WHOLE group has watched a video (a group effort, not a
-  // purchase); every themed league after that costs a one-time 0.99€ per
-  // group. "Premium del grupo" is the alternative to paying per league —
-  // it also removes the ad slots (but not the optional reward-ad extras
-  // for a wildcard or an extra question, those stay either way).
+  // account. No app currency here. Every group gets ONE free unlock via a
+  // collective video watch (the whole group watches, gratis) — usable on
+  // whichever themed league they try to unlock first. Once that free
+  // unlock has been used, every remaining/future themed league only offers
+  // the 0.99€-per-group payment. "Premium del grupo" is the alternative to
+  // paying per league — it also removes the ad slots (but not the optional
+  // reward-ad extras for a wildcard or an extra question, those stay
+  // either way).
   var THEMED_LEAGUES = [
     { key: 'football', icon: '⚽', name: 'Liga de fútbol', desc: 'Una temporada entera de preguntas de fútbol' },
     { key: 'cine', icon: '🎬', name: 'Liga de cine y series', desc: 'Preguntas dedicadas a películas y series' },
@@ -2602,10 +3378,20 @@
     };
   }
 
+  // Whether this group has already spent its one free "unlock via video"
+  // perk — once true, the video option stops showing on every league,
+  // watched or not, and only the 0.99€ payment remains.
+  function usedFreeLeagueUnlock(){
+    return !!(state.leagueUnlocks && state.leagueUnlocks.usedFreeUnlock);
+  }
+
   // Simulates watching the unlock video (no real ad SDK yet, same
   // placeholder pattern as the existing day-catchup and wildcard ads), then
   // records that this player watched it so the group's shared progress
-  // updates for everyone via the live meta/leagueUnlocks listener.
+  // updates for everyone via the live meta/leagueUnlocks listener. If this
+  // watch is what completes the group (everyone's now watched), it also
+  // marks the group's one free unlock as spent, for good, across every
+  // themed league.
   function watchLeagueUnlockAd(key){
     if (!state.db || state.leagueUnlockWatching) return;
     state.leagueUnlockWatching = key;
@@ -2613,12 +3399,17 @@
     setTimeout(function(){
       state.leagueUnlockWatching = false;
       var ref = state.db.doc(gpath('meta/leagueUnlocks'));
-      ref.get().then(function(snap){
+      var membersRef = state.db.collection(gpath('members'));
+      Promise.all([ref.get(), membersRef.get()]).then(function(results){
+        var snap = results[0], memSnap = results[1];
         var data = (snap.exists && snap.data()) || {};
         var entry = data[key] || {};
         entry.watchers = entry.watchers || {};
         entry.watchers[state.playerId] = true;
         data[key] = entry;
+        var totalMembers = memSnap.docs.length;
+        var watchedCount = memSnap.docs.filter(function(d){ return entry.watchers[(d.data() || {}).playerId]; }).length;
+        if (totalMembers > 0 && watchedCount >= totalMembers) data.usedFreeUnlock = true;
         return ref.set(data);
       }).catch(function(e){ console.error('quizco league unlock save error', e); }).then(function(){ render(); });
     }, 1400);
@@ -2629,7 +3420,8 @@
     html += '<div class="muted center mt8" style="margin-bottom:20px;">Cosas para ' + esc(state.leagueName || 'esta liga') + ', pensadas para todo el grupo.</div>';
 
     html += '<div class="muted mt24 mb8" style="font-weight:800;">Ligas temáticas</div>';
-    THEMED_LEAGUES.forEach(function(lg, idx){
+    var freeUnlockUsed = usedFreeLeagueUnlock();
+    THEMED_LEAGUES.forEach(function(lg){
       var progress = leagueUnlockProgress(lg.key);
       html += '<div class="card mt12" style="padding:16px;">'
         + '<div style="display:flex;gap:12px;align-items:flex-start;">'
@@ -2640,17 +3432,19 @@
       if (progress.unlocked){
         html += '<div class="leaguetag mt8" style="display:inline-block;">✅ Desbloqueada</div>'
           + '<div class="faint mt8">El contenido llegará pronto.</div>';
-      } else if (idx === 0){
-        html += '<div class="faint mt8">🎬 Todo el grupo tiene que ver un vídeo para desbloquearla — gratis, sin monedas.</div>'
-          + '<div style="font-weight:800;font-size:12.5px;margin-top:6px;">' + progress.watched + '/' + progress.total + ' han visto el vídeo'
-          + (progress.total - progress.watched > 0 ? ' · faltan ' + (progress.total - progress.watched) : '') + '</div>';
-        if (progress.iWatched){
-          html += '<div class="shoptag mt8" style="display:inline-block;">Ya lo has visto, esperando al resto</div>';
-        } else {
-          html += '<button class="btn btn-brand mt8" data-watch="' + lg.key + '"' + (state.leagueUnlockWatching===lg.key?' disabled':'') + ' style="width:auto;display:inline-block;padding:8px 14px;font-size:12.5px;">'
-            + (state.leagueUnlockWatching===lg.key ? '▶️ Reproduciendo…' : '▶️ Ver vídeo') + '</button>';
-        }
       } else {
+        if (!freeUnlockUsed){
+          html += '<div class="faint mt8">🎬 Todo el grupo tiene que ver un vídeo para desbloquearla — gratis, sin monedas. Es un único desbloqueo gratis por grupo.</div>'
+            + '<div style="font-weight:800;font-size:12.5px;margin-top:6px;">' + progress.watched + '/' + progress.total + ' han visto el vídeo'
+            + (progress.total - progress.watched > 0 ? ' · faltan ' + (progress.total - progress.watched) : '') + '</div>';
+          if (progress.iWatched){
+            html += '<div class="shoptag mt8" style="display:inline-block;">Ya lo has visto, esperando al resto</div>';
+          } else {
+            html += '<button class="btn btn-brand mt8" data-watch="' + lg.key + '"' + (state.leagueUnlockWatching===lg.key?' disabled':'') + ' style="width:auto;display:inline-block;padding:8px 14px;font-size:12.5px;">'
+              + (state.leagueUnlockWatching===lg.key ? '▶️ Reproduciendo…' : '▶️ Ver vídeo') + '</button>';
+          }
+          html += '<div class="faint mt8" style="font-size:11px;">— o si no queréis esperar —</div>';
+        }
         html += '<div class="shopprice mt8">0,99 € · pago único para todo el grupo</div>'
           + '<div class="shoptag mt4" style="display:inline-block;">Muy pronto</div>';
       }
@@ -2682,11 +3476,21 @@
   // account-level, so this is where the shop link for them lives too.
   function profileScreen(){
     var html = '<div class="word center mt4">Tu perfil</div>';
-    html += '<div class="card center mt16" style="padding:26px 20px;">';
-    html += '<div style="width:84px;height:84px;margin:0 auto;">' + avatarHTML(state.playerName, state.playerId) + '</div>';
-    html += '<div style="font-family:\'Bungee\',sans-serif;font-weight:400;font-size:20px;margin-top:14px;color:var(--brand);">' + esc(state.playerName || '') + '</div>';
-    html += '<div class="faint mt8">Este es tu quesito — tu color sale de tu nombre, y muy pronto podrás cambiarlo con marcos de la tienda.</div>';
-    html += '<button class="btn btn-brand mt16" id="profileShopBtn">🛍️ Personalizar en la tienda</button>';
+    html += '<div class="card center mt16" style="padding:22px 20px;">';
+    html += '<div style="width:110px;height:140px;margin:0 auto;">' + qcFigure(state.charId, state.equipped) + '</div>';
+    html += '<div style="font-family:\'Bungee\',sans-serif;font-weight:400;font-size:20px;margin-top:10px;color:var(--brand);">' + esc(state.playerName || '') + '</div>';
+    html += '<div class="faint mt8">Tu personaje es gratis y lo puedes cambiar cuando quieras. La ropa, los sombreros y lo que llevas en la mano se compran en la tienda.</div>';
+    html += '<button class="btn btn-brand mt16" id="profileShopBtn">🛍️ Ir a la tienda</button>';
+    html += '</div>';
+
+    html += '<div class="muted mt24 mb8" style="font-weight:800;">Cambiar de personaje</div>';
+    html += '<div class="chargrid">';
+    QC_CHARS.forEach(function(c){
+      html += '<div class="charpick' + (c.id === state.charId ? ' sel' : '') + '" data-pickchar="' + esc(c.id) + '">'
+        + '<div class="charfig">' + qcFigure(c.id, state.equipped) + '</div>'
+        + '<div class="charlabel">' + esc(c.name) + '</div>'
+        + '</div>';
+    });
     html += '</div>';
     html += '<div class="center mt16"><a href="#" id="backFromProfile" class="faint">← Volver a tus ligas</a></div>';
     return html;
@@ -2695,6 +3499,14 @@
   function bindProfile(){
     var shopLink = document.getElementById('profileShopBtn');
     if (shopLink) shopLink.addEventListener('click', function(){ state.view = 'shop'; render(); });
+    document.querySelectorAll('[data-pickchar]').forEach(function(el){
+      el.addEventListener('click', function(){
+        state.charId = el.getAttribute('data-pickchar');
+        lsSet('qc_char', state.charId);
+        saveLookToMember();
+        render();
+      });
+    });
     var back = document.getElementById('backFromProfile');
     if (back) back.addEventListener('click', function(e){ e.preventDefault(); state.leaguesStep = 'list'; state.view = 'leagues'; render(); });
   }
@@ -3196,11 +4008,18 @@
     if (!state.db) return;
     var ref = state.db.doc(gpath('members/' + state.playerId));
     ref.get().then(function(snap){
+      var eq = state.equipped || {};
       if (!snap.exists){
-        return ref.set({ playerId: state.playerId, playerName: state.playerName, joinedAt: new Date().toISOString() });
+        return ref.set({ playerId: state.playerId, playerName: state.playerName, charId: state.charId,
+          equipped: eq, joinedAt: new Date().toISOString() });
       }
-      if (snap.data().playerName !== state.playerName){
-        return ref.set({ playerId: state.playerId, playerName: state.playerName, joinedAt: snap.data().joinedAt || new Date().toISOString() });
+      var d = snap.data() || {};
+      // keep the member doc in step with the name/character/outfit you have
+      // locally, so everyone else's screens show the right look
+      if (d.playerName !== state.playerName || d.charId !== state.charId
+          || JSON.stringify(d.equipped || {}) !== JSON.stringify(eq)){
+        return ref.set({ playerId: state.playerId, playerName: state.playerName, charId: state.charId,
+          equipped: eq, joinedAt: d.joinedAt || new Date().toISOString() });
       }
     }).catch(function(e){
       console.error('quizco member register error', e);
