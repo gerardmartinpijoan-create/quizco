@@ -184,6 +184,10 @@
   .shopname { font-weight: 800; font-size: 13px; }
   .shopdesc { font-weight: 600; font-size: 11.5px; color: var(--ink-soft); line-height: 1.3; }
   .shopprice { font-weight: 800; font-size: 12px; color: var(--brand); margin-top: 2px; }
+  .adbanner { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; margin: 0 auto; max-width: 460px;
+    padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px)); text-align: center;
+    background: var(--surface); border-top: 2.5px solid var(--ink); box-shadow: 0 -3px 0 var(--shadow); }
+  body.has-adbanner { padding-bottom: 78px; }
   .adslot { margin-top: 12px; border: 2px dashed var(--line); border-radius: 12px; padding: 14px; text-align: center; background: var(--surface); }
   .adslot.video { padding: 24px 14px; }
   .adlabel { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-faint); margin-bottom: 4px; }
@@ -1289,7 +1293,9 @@
     app.innerHTML = dbErrorBanner() + mainScreen();
     // The lobby (waiting room) and the "Tus ligas" picker have no tab bar —
     // only a league you've actually stepped into does.
-    document.body.classList.toggle('has-bottomnav', state.view !== 'lobby' && state.view !== 'leagues' && state.view !== 'profile');
+    var answering = isQuizLocked();
+    document.body.classList.toggle('has-bottomnav', !answering && state.view !== 'lobby' && state.view !== 'leagues' && state.view !== 'profile');
+    document.body.classList.toggle('has-adbanner', answering && !state.premium);
     bindMainScreen();
   }
 
@@ -1908,6 +1914,17 @@
   function mainScreen(){
     if (state.view === 'lobby') return lobbyScreen();
     var html = '';
+    // While you're actually answering, the screen is just the question: no
+    // header, no tabs, nothing to wander off to — only the ad banner pinned
+    // at the bottom. Everything comes back as soon as you've submitted.
+    if (isQuizLocked()){
+      html += quizScreen();
+      if (!state.premium){
+        html += '<div class="adbanner"><div class="adlabel">Publicidad</div>'
+          + '<div class="faint" style="font-size:12px;">Espacio para un banner (próximamente)</div></div>';
+      }
+      return html;
+    }
     var showBack = state.view !== 'leagues';
     html += '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">'
       + '<div style="display:flex;align-items:center;gap:8px;min-width:0;">'
@@ -2806,11 +2823,8 @@
       html += '<div class="' + cls + '" data-oi="' + oi + '">' + esc(opt) + '</div>';
     });
     html += '</div>';
-    // A banner ad slot under every question — placeholder for now (no ad
-    // network wired up), and skipped entirely once the group is premium.
-    if (!state.premium){
-      html += '<div class="adslot"><div class="adlabel">Publicidad</div><div class="faint" style="font-size:12px;">Espacio para un banner (próximamente)</div></div>';
-    }
+    // No ad in the flow here: while answering, the banner is pinned to the
+    // bottom of the screen by mainScreen() instead.
     return html;
   }
 
@@ -3383,11 +3397,53 @@
   // paying per league — it also removes the ad slots (but not the optional
   // reward-ad extras for a wildcard or an extra question, those stay
   // either way).
+  //
+  // Themed leagues work like a monthly drop: two new ones go on sale each
+  // month and the previous ones stop being sold — but a group that unlocked
+  // one keeps it for good, so the catalogue never really shrinks for them.
+  //
+  // To put next month's pair on sale: drop two question files into preguntas/
+  // and add two entries here with that month. Nothing else needs touching —
+  // what's on sale is worked out from the date, and the unlock records in
+  // meta/leagueUnlocks are what make an old league stay playable.
+  //
+  var LEAGUE_QUESTION_COUNT = 180;  // 30 días x 6, lo que trae cada liga temática
   var THEMED_LEAGUES = [
-    { key: 'football', icon: '⚽', name: 'Liga de fútbol', desc: 'Una temporada entera de preguntas de fútbol' },
-    { key: 'cine', icon: '🎬', name: 'Liga de cine y series', desc: 'Preguntas dedicadas a películas y series' },
-    { key: 'ciencia', icon: '🔬', name: 'Liga de ciencia extra', desc: 'Más preguntas de ciencia y naturaleza' }
+    { key: 'futbol', month: '2026-09', icon: '⚽', name: 'Liga de fútbol',
+      desc: 'Un mes de preguntas solo de fútbol: mundiales, Champions, LaLiga, leyendas y estadios',
+      file: 'preguntas/futbol.json' },
+    { key: 'cine', month: '2026-09', icon: '🎬', name: 'Liga de cine y series',
+      desc: 'Un mes de cine y televisión: clásicos, sagas, directores, Oscars y animación',
+      file: 'preguntas/cine.json' }
   ];
+  function currentMonthStr(){
+    var d = new Date();
+    var m = String(d.getMonth() + 1);
+    return d.getFullYear() + '-' + (m.length < 2 ? '0' + m : m);
+  }
+  // A league your group has unlocked stays yours whatever month it is.
+  function ownsThemedLeague(key){ return leagueUnlockProgress(key).unlocked; }
+  // What the shop shows: everything you already own, plus this month's drop.
+  // Past months you didn't buy simply aren't on the shelf any more.
+  function themedLeaguesOnShelf(){
+    var month = currentMonthStr();
+    return THEMED_LEAGUES.filter(function(lg){
+      return ownsThemedLeague(lg.key) || lg.month === month;
+    });
+  }
+  // Question banks are fetched from their own JSON file next to index.html,
+  // so a new month is a small upload rather than a new build of the app.
+  function loadThemedQuestions(key, cb){
+    var lg = null;
+    THEMED_LEAGUES.forEach(function(x){ if (x.key === key) lg = x; });
+    if (!lg) { cb(null); return; }
+    state.themedBanks = state.themedBanks || {};
+    if (state.themedBanks[key]) { cb(state.themedBanks[key]); return; }
+    fetch(lg.file).then(function(r){ return r.json(); }).then(function(data){
+      state.themedBanks[key] = data;
+      cb(data);
+    }).catch(function(e){ console.error('quizco themed questions error', e); cb(null); });
+  }
 
   function leagueUnlockProgress(key){
     var members = state.members || [];
@@ -3445,9 +3501,12 @@
     var html = '<div class="word center mt4">Tienda de la liga</div>';
     html += '<div class="muted center mt8" style="margin-bottom:20px;">Cosas para ' + esc(state.leagueName || 'esta liga') + ', pensadas para todo el grupo.</div>';
 
-    html += '<div class="muted mt24 mb8" style="font-weight:800;">Ligas temáticas</div>';
+    html += '<div class="muted mt24 mb4" style="font-weight:800;">Ligas temáticas</div>';
+    html += '<div class="faint" style="margin-bottom:10px;">Cada mes salen dos ligas nuevas y las anteriores dejan de venderse. Las que desbloqueéis son vuestras para siempre.</div>';
     var freeUnlockUsed = usedFreeLeagueUnlock();
-    THEMED_LEAGUES.forEach(function(lg){
+    var shelf = themedLeaguesOnShelf();
+    if (!shelf.length) html += '<div class="faint mt8">Este mes no hay ninguna liga nueva. Vuelve el mes que viene.</div>';
+    shelf.forEach(function(lg){
       var progress = leagueUnlockProgress(lg.key);
       html += '<div class="card mt12" style="padding:16px;">'
         + '<div style="display:flex;gap:12px;align-items:flex-start;">'
@@ -3456,8 +3515,8 @@
         + '<div class="shopname">' + esc(lg.name) + '</div>'
         + '<div class="shopdesc">' + esc(lg.desc) + '</div>';
       if (progress.unlocked){
-        html += '<div class="leaguetag mt8" style="display:inline-block;">✅ Desbloqueada</div>'
-          + '<div class="faint mt8">El contenido llegará pronto.</div>';
+        html += '<div class="leaguetag mt8" style="display:inline-block;">✅ Vuestra para siempre</div>'
+          + '<div class="faint mt8">' + LEAGUE_QUESTION_COUNT + ' preguntas. Seguirá disponible aunque deje de venderse.</div>';
       } else {
         if (!freeUnlockUsed){
           html += '<div class="faint mt8">🎬 Todo el grupo tiene que ver un vídeo para desbloquearla — gratis, sin monedas. Es un único desbloqueo gratis por grupo.</div>'
@@ -3472,6 +3531,7 @@
           html += '<div class="faint mt8" style="font-size:11px;">— o si no queréis esperar —</div>';
         }
         html += '<div class="shopprice mt8">0,99 € · pago único para todo el grupo</div>'
+          + '<div class="faint mt4" style="font-size:11px;">Solo a la venta este mes</div>'
           + '<div class="shoptag mt4" style="display:inline-block;">Muy pronto</div>';
       }
       html += '</div></div></div>';
