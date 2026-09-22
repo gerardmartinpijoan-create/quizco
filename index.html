@@ -1164,13 +1164,31 @@
   function generalBank(){
     return (state.generalBank && state.generalBank.length) ? state.generalBank : QUESTIONS;
   }
+  // The question files can sit either in a preguntas/ folder or loose at the
+  // root of the repo — both layouts are fine, we just try one then the other,
+  // so however they end up uploaded the app still finds them.
+  function fetchQuestionFile(name, cb){
+    var rutas = ['preguntas/' + name, name];
+    var i = 0;
+    (function intenta(){
+      if (i >= rutas.length) { cb(null); return; }
+      var url = rutas[i++];
+      fetch(url).then(function(r){
+        if (!r.ok) throw new Error('no está en ' + url);
+        return r.json();
+      }).then(function(data){ cb(data); }).catch(function(){ intenta(); });
+    })();
+  }
   function loadGeneralBank(){
-    fetch('preguntas/general.json').then(function(r){ return r.json(); }).then(function(data){
+    fetchQuestionFile('general.json', function(data){
       var blocks = (data && data.questions) || null;
-      if (!blocks || !blocks.length) return;
+      if (!blocks || !blocks.length){
+        console.warn('quizco: no encuentro general.json, uso el banco interno');
+        return;
+      }
       state.generalBank = blocks;
       render();
-    }).catch(function(e){ console.warn('quizco: uso el banco interno de preguntas', e); });
+    });
   }
   function questionsForDay(day, season){
     var s = season || state.season || 1;
@@ -3428,10 +3446,10 @@
   var THEMED_LEAGUES = [
     { key: 'futbol', month: '2026-09', icon: '⚽', name: 'Liga de fútbol',
       desc: 'Un mes de preguntas solo de fútbol: mundiales, Champions, LaLiga, leyendas y estadios',
-      file: 'preguntas/futbol.json' },
+      file: 'futbol.json' },
     { key: 'cine', month: '2026-09', icon: '🎬', name: 'Liga de cine y series',
       desc: 'Un mes de cine y televisión: clásicos, sagas, directores, Oscars y animación',
-      file: 'preguntas/cine.json' }
+      file: 'cine.json' }
   ];
   function currentMonthStr(){
     var d = new Date();
@@ -3456,10 +3474,10 @@
     if (!lg) { cb(null); return; }
     state.themedBanks = state.themedBanks || {};
     if (state.themedBanks[key]) { cb(state.themedBanks[key]); return; }
-    fetch(lg.file).then(function(r){ return r.json(); }).then(function(data){
-      state.themedBanks[key] = data;
+    fetchQuestionFile(lg.file, function(data){
+      if (data) state.themedBanks[key] = data;
       cb(data);
-    }).catch(function(e){ console.error('quizco themed questions error', e); cb(null); });
+    });
   }
 
   function leagueUnlockProgress(key){
