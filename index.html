@@ -1157,11 +1157,27 @@
   function setDayCatchupUnlocked(day){
     lsSet('qc_catchup_' + state.groupId + '_s' + state.season + '_' + day, '1');
   }
+  // The general league's questions live in preguntas/general.json so a bigger
+  // bank is just an upload, never a new build. The 24 blocks baked into this
+  // file stay as a fallback: if the JSON is missing or the network is down,
+  // the quiz still works rather than showing an empty screen.
+  function generalBank(){
+    return (state.generalBank && state.generalBank.length) ? state.generalBank : QUESTIONS;
+  }
+  function loadGeneralBank(){
+    fetch('preguntas/general.json').then(function(r){ return r.json(); }).then(function(data){
+      var blocks = (data && data.questions) || null;
+      if (!blocks || !blocks.length) return;
+      state.generalBank = blocks;
+      render();
+    }).catch(function(e){ console.warn('quizco: uso el banco interno de preguntas', e); });
+  }
   function questionsForDay(day, season){
     var s = season || state.season || 1;
-    var totalBlocks = QUESTIONS.length;
+    var bank = generalBank();
+    var totalBlocks = bank.length;
     var idx = (((s - 1) * 6 + (day - 1)) % totalBlocks + totalBlocks) % totalBlocks;
-    return QUESTIONS[idx];
+    return bank[idx];
   }
 
   var state = {
@@ -1264,6 +1280,7 @@
     // All account-level (the same in every league), so localStorage — and
     // mirrored onto your member doc so the rest of the group sees your look.
     pendingName: null,
+    generalBank: null,
     charId: lsGet('qc_char', '') || '',
     owned: readJson('qc_owned', {}),
     equipped: readJson('qc_equipped', {}),
@@ -4343,6 +4360,7 @@
   }
 
   render();
+  loadGeneralBank();
   initAuth();
 })();
 </script>
